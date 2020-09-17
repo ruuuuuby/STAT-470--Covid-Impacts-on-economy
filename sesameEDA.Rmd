@@ -1,0 +1,319 @@
+---
+title: "Sesame Data EDA"
+author: "Leah Hunt"
+output: html_notebook
+---
+
+
+```{r}
+library(ggplot2)
+library(tidyr)
+sesame <- read.csv("sesame.csv ")
+```
+
+
+Below transforms the data so it can be useful for the plot
+
+```{r}
+sesameLongPre <- pivot_longer(sesame, cols = c("prebody", "prelet",    "preform",   "prenumb",   "prerelat",  "preclasf"), names_to = "Pre", values_to = "ScorePre")
+sesameLongPost <- pivot_longer(sesame, cols = c("postbody", "postlet",    "postform",   "postnumb",   "postrelat",  "postclasf"), names_to = "Post", values_to = "ScorePost")
+sesameLong <- data.frame(Type = sesameLongPre$Pre, Post = sesameLongPost$Post, ScorePre = sesameLongPre$ScorePre, ScorePost = sesameLongPost$ScorePost, Category = as.factor(sesameLongPre$viewcat))
+
+
+# This is solely to make the plot labels better
+sesameLong$Type[sesameLong$Type=="prebody"] <- "Body Parts"
+sesameLong$Type[sesameLong$Type=="prelet"] <- "Letters"
+sesameLong$Type[sesameLong$Type=="preform"] <- "Forms"
+sesameLong$Type[sesameLong$Type=="prenumb"] <- "Numbers"
+sesameLong$Type[sesameLong$Type=="prerelat"] <- "Relationships"
+sesameLong$Type[sesameLong$Type=="preclasf"] <- "Classification"
+```
+
+
+
+Here is a modified version of the plot we started working on in class. I switched the facets to the amount sesame street was viewed so that color would become the type of score (since differentiating between amount watching is probably more relevant).
+
+```{r}
+plot<-ggplot2::ggplot(aes(x = ScorePre, y=ScorePost, color= Type), data= sesameLong) +
+        geom_point() + 
+        geom_abline() +
+        facet_wrap(facet = vars(Category)) +
+        xlab("Pre") + 
+        ylab('Post') +
+        ggtitle("Scoring Changes by Category and Viewing Level")+
+        theme(axis.text = element_text(size=18),
+              plot.title = element_text(size=18, face="bold"),
+              axis.title = element_text(size=18),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+
+```
+
+This plot shows the age and gender ranges in each group; this is mainly meant to check if there is any clear imbalance between the groups that could need addressed in the analysis.
+
+```{r}
+gender <- sesame$sex
+gender[gender==1] <- "Male"
+gender[gender==2] <- "Female"
+gender <- as.factor(gender)
+plot<-ggplot2::ggplot(aes(x = age, fill= gender), data= sesame) +
+        geom_histogram(binwidth = 4) + 
+        facet_wrap(facet = vars(viewcat)) +
+        xlab("Age (months)") + 
+        ylab('Number of children') +
+        ggtitle("Distribution of Age and Gender in Each Viewing Group")+
+        theme(axis.text = element_text(size=18),
+              plot.title = element_text(size=18, face="bold"),
+              axis.title = element_text(size=18),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+
+```
+
+```{r}
+sesameTestScores <- data.frame(test = c(sesameLongPre$Pre, sesameLongPost$Post), score = c(sesameLongPre$ScorePre, sesameLongPost$ScorePost))
+
+
+plot<-ggplot2::ggplot(aes(x = score), data= sesameTestScores) +
+        geom_histogram() + 
+        facet_wrap(facet = vars(test)) +
+        xlab("Score") + 
+        ylab('Number of children') +
+        ggtitle("Distribution of Test Scores by Test Type")+
+        theme(axis.text = element_text(size=18),
+              plot.title = element_text(size=18, face="bold"),
+              axis.title = element_text(size=18),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+
+```
+
+
+```{r}
+
+sesameTestScores <- data.frame(test = c(sesameLongPre$Pre, sesameLongPost$Post), score = c(sesameLongPre$ScorePre, sesameLongPost$ScorePost))
+sesameTestScores$test[sesameTestScores$test=="prebody"] <- "Body Parts"
+sesameTestScores$test[sesameTestScores$test=="postbody"] <- "Body Parts"
+sesameTestScores$test[sesameTestScores$test=="prelet"] <- "Letters"
+sesameTestScores$test[sesameTestScores$test=="postlet"] <- "Letters"
+sesameTestScores$test[sesameTestScores$test=="preform"] <- "Forms"
+sesameTestScores$test[sesameTestScores$test=="postform"] <- "Forms"
+sesameTestScores$test[sesameTestScores$test=="prenumb"] <- "Numbers"
+sesameTestScores$test[sesameTestScores$test=="postnumb"] <- "Numbers"
+sesameTestScores$test[sesameTestScores$test=="prerelat"] <- "Relationships"
+sesameTestScores$test[sesameTestScores$test=="postrelat"] <- "Relationships"
+sesameTestScores$test[sesameTestScores$test=="preclasf"] <- "Classification"
+sesameTestScores$test[sesameTestScores$test=="postclasf"] <- "Classification"
+
+plot<-ggplot2::ggplot(aes(x = score), data= sesameTestScores) +
+        geom_histogram() + 
+        facet_wrap(facets = vars(test)) +
+        xlab("Score") + 
+        ylab('Number of children') +
+        ggtitle("Distribution of Test Scores by Test Type")+
+        theme(axis.text = element_text(size=18),
+              plot.title = element_text(size=18, face="bold"),
+              axis.title = element_text(size=18),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+
+```
+You can use this to play with qq plots for each of the variables (just change the name in the [] in the first line). Unfortunately, the only two that do not have a reasonable argument for normality are letters and numbers (i.e. the two we care about most)
+
+```{r}
+mod <- lm(score ~ 1, data = sesameTestScores[sesameTestScores$test == "Forms",])
+a <- car::qqPlot(
+  x = mod$residuals,
+  distribution = "norm",
+  envelope = 0.97,
+  pch = 20
+)
+```
+```{r}
+mod <- lm(prelet ~ 1, data = sesame)
+a <- car::qqPlot(
+  x = mod$residuals,
+  distribution = "norm",
+  envelope = 0.97,
+  pch = 20
+)
+```
+
+Here is a knitr table with all of the basic summary statistics for every variable. (Yes, I am aware this is overkill, but I already had this code written and only had to change the first line to generate everything.)
+
+```{r}
+dt<-tidyr::pivot_longer(sesame, 1:23, names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df <- data.frame(
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+
+knitr::kable(df, 
+             caption = "Statistics by Variable",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position")
+
+```
+
+
+
+BEGIN INTRO ANALYSIS STUFF HERE!!!
+
+```{r}
+# With WAY overkil interaction terms (and viewcat as a factor)
+mod <- lm(postlet ~ prelet + as.factor(viewcat) + sex + age + peabody + peabody * sex + peabody * as.factor(viewcat) + peabody*sex*as.factor(viewcat) + sex*prelet + sex*as.factor(viewcat) + sex*age + prelet*as.factor(viewcat) + age*as.factor(viewcat) + prelet*age + sex*prelet*as.factor(viewcat) + prelet*age*as.factor(viewcat) + sex*age*as.factor(viewcat) + prelet*age*sex, data = sesame)
+a <- car::qqPlot(
+  x = mod$residuals,
+  distribution = "norm",
+  envelope = 0.97,
+  pch = 20
+)
+
+plot(mod, which = 1, pch = 19)
+plot(mod$residuals)
+plot(sesame$postlet)
+summary(mod)
+```
+
+```{r}
+library(leaps)
+fits <- summary(regsubsets(postlet ~ prelet + as.factor(viewcat) + sex + age + peabody + peabody * sex + peabody * as.factor(viewcat) + peabody*sex*as.factor(viewcat) + sex*prelet + sex*as.factor(viewcat) + sex*age + prelet*as.factor(viewcat) + age*as.factor(viewcat) + prelet*age + sex*prelet*as.factor(viewcat) + prelet*age*as.factor(viewcat) + sex*age*as.factor(viewcat) + prelet*age*sex, data = sesame))
+fits$which
+fits$adjr2
+```
+```{r}
+means <- c(mean(sesame$postlet[sesame$viewcat==1]),
+mean(sesame$postlet[sesame$viewcat==2]),
+mean(sesame$postlet[sesame$viewcat==3]),
+mean(sesame$postlet[sesame$viewcat==4]))
+plot(means)
+plot(sesame$postlet[sesame$viewcat==1])
+plot(sesame$postlet[sesame$viewcat==2])
+plot(sesame$postlet[sesame$viewcat==3])
+plot(sesame$postlet[sesame$viewcat==4])
+```
+```{r}
+plot<-ggplot2::ggplot(aes(x = id, y=postlet, color= as.factor(viewcat)), data= sesame) +
+        geom_point() + 
+        xlab("Pre") + 
+        ylab('Post') +
+        ggtitle("Scoring Changes by Category and Viewing Level")+
+        geom_smooth()+
+        theme(axis.text = element_text(size=18),
+              plot.title = element_text(size=18, face="bold"),
+              axis.title = element_text(size=18),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+```
+
+
+
+```{r}
+library(leaps)
+fits <- summary(regsubsets(postlet ~ prelet + as.factor(viewcat)  + peabody + peabody * as.factor(viewcat) +  sex*prelet + sex*as.factor(viewcat)  + sex*prelet*as.factor(viewcat) + sex*age*as.factor(viewcat) , data = sesame))
+fits$which
+fits$adjr2
+```
+```{r}
+mod <- lm(postlet ~ prelet + as.factor(viewcat)  + peabody + peabody * as.factor(viewcat) +  sex*prelet + sex*as.factor(viewcat)  + sex*prelet*as.factor(viewcat) + sex*age*as.factor(viewcat), data= sesame)
+car::vif(mod)
+```
+
+
+```{r}
+# With viewcat as not a factor and not overkill interactions (but still fair number of them)
+mod <- lm(postlet ~ prelet + viewcat + sex + age + sex*prelet + sex*viewcat + sex*age + sex*viewcat + age*prelet, data = sesame)
+a <- car::qqPlot(
+  x = mod$residuals,
+  distribution = "norm",
+  envelope = 0.97,
+  pch = 20
+)
+
+plot(mod, which = 1, pch = 19)
+plot(mod$residuals)
+plot(sesame$postlet)
+summary(mod)
+```
+
+
+
+How to overanalyze potential patterns in a residual plot: it looks like the Batman symbol!
+
+
+
+
+
+
+
+```{r}
+mod2 <- lm(postnumb ~ prenumb + viewcat + sex + age + sex*prenumb + sex*viewcat + sex*age, data = sesame)
+a <- car::qqPlot(
+  x = mod2$residuals,
+  distribution = "norm",
+  envelope = 0.97,
+  pch = 20
+)
+
+plot(mod2, which = 1, pch = 19)
+plot(mod2$residuals)
+plot(sesame$postnumb)
+summary(mod2)
+```
+
+
+
+
+
+
+Questions with basic answers:
+
+What is the relevant design/sample information for this study?
+
+The subjects were pre-kindergarten children (who are said to come from a group representative of those we are interested in). All we know about the sampling is that it is said to be representative; we weren’t told the methods. We are given information about the children (age, gender, and location) as well as information about their exposure to sesame street (important variables being their pre and post scores split into 6 different categories). What we care most about is the improvement in scores of the children relative to watching sesame street.  
+
+
+State the research question(s).
+
+Is Sesame Street effective in improving basic skills (i.e. the stated categories) for the groups of interest?
+
+
+For a given research question, what are two possible responses you could use?
+
+The post scores (for all of the categories) would be possible responses. We could also combine the post scores into one super score. 
+
+
+What figures would be most useful for a given research question?
+
+Regression fits would likely be helpful (when we get there) as well as general scatter plots of pre and post (see above).
+
