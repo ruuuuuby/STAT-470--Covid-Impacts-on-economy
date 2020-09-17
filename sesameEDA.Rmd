@@ -201,6 +201,9 @@ plot(sesame$postlet)
 summary(mod)
 ```
 
+
+
+
 ```{r}
 library(leaps)
 fits <- summary(regsubsets(postlet ~ prelet + as.factor(viewcat) + sex + age + peabody + peabody * sex + peabody * as.factor(viewcat) + peabody*sex*as.factor(viewcat) + sex*prelet + sex*as.factor(viewcat) + sex*age + prelet*as.factor(viewcat) + age*as.factor(viewcat) + prelet*age + sex*prelet*as.factor(viewcat) + prelet*age*as.factor(viewcat) + sex*age*as.factor(viewcat) + prelet*age*sex, data = sesame))
@@ -235,6 +238,42 @@ plot<-ggplot2::ggplot(aes(x = id, y=postlet, color= as.factor(viewcat)), data= s
 
 plot
 ```
+
+cat2 !
+cat3 !
+cat4 !
+pre
+peabody
+sex !
+age
+```{r}
+library(data.table)
+#library(Metrics)
+library(caret)
+dataLet <- sesame[,c("prelet", "postlet", "sex", "peabody", "age", "viewcat")]
+dataLet$viewcat <- as.factor(dataLet$viewcat)
+dummies <- dummyVars(postlet~., data=dataLet)
+letters<-predict(dummies, newdata=dataLet)
+letters<-data.table(train2)
+letters$postlet<- dataLet$postlet
+letters <- letters[,-"viewcat.1"]
+letters$sex <- letters$sex - 1
+letters
+```
+```{r}
+modLetters <- lm(postlet~. + viewcat.2*age + viewcat.2*sex + viewcat.2* peabody + viewcat.2*prelet + viewcat.3*age + viewcat.3*sex + viewcat.3* peabody + viewcat.3*prelet + viewcat.4*age + viewcat.4*sex + viewcat.4* peabody + viewcat.4*prelet + sex*prelet + sex*age + sex*peabody + peabody*prelet + peabody*age + age*prelet, data = letters)
+summary(modLetters)
+```
+```{r}
+modLetters2 <- lm(postlet~. + viewcat.2*age + peabody*prelet, data = letters)
+summary(modLetters2)
+```
+
+```{r}
+modLetters3 <- lm(postlet~. + viewcat.2*age, data = letters)
+summary(modLetters3)
+```
+
 
 
 
