@@ -1,0 +1,81 @@
+---
+title: "Data Description and Literary Review"
+author: "Leah Hunt, Ziling Zhang, and Jiahui Cheng"
+date: "9/22/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part 1 -- Research Question
+
+How do different external shocks affect the economy as a whole? What are the similarities and differences between different shocks? How does modelling economic trends surrounding these shocks differ from modelling economic trends in times without shocks?
+
+
+
+## Part 2 -- Data Description
+
+The data was pulled from two sources. The DOW data was pulled from Yahoo Finance, which keeps up to date documentation of stock market data, in this case the DOW. The original data comes from ICE Data Services and is collected with the goal of general economic data collection. The data that we pulled considers the DOW values monthly, though data is available on a more frequent basis with updates happening in real time, making each case a particular month of a particular year. We also pulled the daily data, primarily for EDA purposes.
+
+The second source, where all remaining data came from, was the Federal Reserve Economic Data (FRED), which is a database of economic data compiled by the Federal Reserve. FRED gets the data from a variety of sources. The sources for the ones we used are listed below:
+
+* Net Exports: This data was collected from the Bureau of Economic Analysis, which collects various economic data with the purpose of getting a better understanding of the economy and modelling, particularly for government interests. This data was collected in a quarterly format, so each observation in the original represents the data for one quarter (three months).
+
+* Consumer Confidence: This is read as the University of Michigan Consumer Sentiment value, which is observed on a monthly basis. The University of Michigan periodically updates this value with the goal of modelling a form of consumer confidence in the market. 
+
+* CPI: This data originally came from the Bureau of Labor Statistics and is formally called the Consumer Price Index for All Urban Consumers: All Items. The data is listed monthly and was originally collected in the context of modeling, particularly for government interests.
+
+* Federal Funds Rate: This data was collected from the Federal Reserve itself, the agency that sets the Federal Funds Rate. The original data has an observation for each day.
+
+* GDP: This data is collected quarterly and is originally from the Bureau of Economic Analysis (See Net Exports).
+
+* Gold Price: This data is reported daily and was originally collected by the ICE Benchmark Administration (IBA). IBA reports the gold prices on a daily basis using independent methodology to calculate the price, as requested by the London Bullion Market Association.
+
+* Oil Price: This data was originally from the Federal Reserve Bank of St. Louis and is reported monthly. The original purpose of compiling the data, was to understand historical oil prices, with a main focus being on prices based out of Texas. 
+
+* Unemployment Rate: This data was collected from the Bureau of Labor Statistics (see CPI). The data was collected on a monthly basis.
+
+Our goal is to combine these various economic metrics in order to get a better understanding of economic trends. In particular, we plan to convert all of them to a monthly metric so that we can compare times with and without shocks to answer our research question.
+
+
+## Part 3 -- Annotated Bibliography
+
+### Literary Source Citations:
+
+Ahmed, H., Hasan, K. T., Islam, M. T., &amp; Galib, F. C. (2020). Lockdown Policy Dilemma: COVID-19 Pandemic versus Economy and Mental Health. *Journal of Biomedical Analytics*, 3(2), 37-58. doi:10.30577/jba.v3i2.60 This paper discusses the impact of forcing businesses to close and people to stay at home on the economy.
+
+Anyfantaki, S., Balfoussia, H., Dimitropoulou, D., Gibson, H., Papageorgiou, D., Petroulakis, F., . . . Vasardani, M. (2020). COVID-19 and other pandemics: A literature review for economists. Economic Bulletin, Bank of Greece, (51), 1-36. This paper gives a lot of background on the effects of previous pandemics economically then discusses them in the context of COVID-19.
+
+Atkeson, A. (2020, March). What Will be the Economic Impact of COVID-19 in the US? Rough Estimates of Disease Scenarios [PDF]. Cambridge, MA: National Bureau of Economic Research. This paper considers the economic ramifications in terms of the trade-off between disease spread and limited economic growth.
+
+Baker, S. R, Bloom, N., Davis, S. J., Kost, K. J., Sammon, M. C., Viratyosin, T. (2020, April). The Umprecedented Stock Market Impact of COVID-19 [PDF]. Cambridge, MA: National Bureau of Economic Research. This paper considers the stock market impacts of COVID-19 in relation to past similar disease outbreaks. The paper notes a much larger market volatility relative to any previous outbreak.
+
+
+
+
+Zekra, L. (2020). COVID-19 Pandemic and Global Economic Impact. *Ovidius University Annals, Economic Sciences Series*, 0(1), 237-244. Retrieved September 22, 2020, from https://ideas.repec.org/a/ovi/oviste/vxxy2020i1p237-244.html This source breaks down the economic impacts of COVID-19. It discusses impacts from the disease itself as well as from measures taken to combat the disease. It also discusses individual industries, both those hurt and those helped by the pandemic.
+
+
+Zeshan, M. (2020). Double-hit scenario of Covid-19 and global value chains. *Environment, Development and Sustainability*. doi:10.1007/s10668-020-00982-w This article considers which sectors of the economy were most hit by COVID-19 and found that all sectors had at least mild impact with some larger than others.
+
+### Data Citations:
+
+U.S. Bureau of Economic Analysis, Net Exports of Goods and Services [NETEXP], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NETEXP, September 6, 2020.
+
+Surveys of Consumers, University of Michigan, University of Michigan: Consumer Sentiment [UMCSENT], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/UMCSENT, September 6, 2020.
+
+U.S. Bureau of Labor Statistics, Consumer Price Index for All Urban Consumers: All Items in U.S. City Average [CPIAUCSL], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CPIAUCSL, September 6, 2020.
+
+Board of Governors of the Federal Reserve System (US), Effective Federal Funds Rate [DFF], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DFF, September 6, 2020.
+
+U.S. Bureau of Economic Analysis, Real Gross Domestic Product [GDPC1], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GDPC1, September 6, 2020.
+
+ICE Benchmark Administration Limited (IBA), Gold Fixing Price 10:30 A.M. (London time) in London Bullion Market, based in U.S. Dollars [GOLDAMGBD228NLBM], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GOLDAMGBD228NLBM, September 6, 2020.
+
+Federal Reserve Bank of St. Louis, Spot Crude Oil Price: West Texas Intermediate (WTI) [WTISPLC], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WTISPLC, September 6, 2020.
+
+U.S. Bureau of Labor Statistics, Unemployment Rate [UNRATE], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/UNRATE, September 6, 2020.
+
+ICE Data Services, Dow Jones Composite Average (^DJA), retrieved from Yahoo!Finance; https://finance.yahoo.com/quote/%5EDJA/history?p=%5EDJA, September 6, 2020.
