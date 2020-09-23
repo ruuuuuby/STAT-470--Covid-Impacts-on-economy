@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Part 1 -- Research Question
 
-How do different external shocks affect the economy as a whole? What are the similarities and differences between different shocks? How does modelling economic trends surrounding these shocks differ from modelling economic trends in times without shocks?
+How do different external shocks affect the economy as a whole? What are the similarities and differences between different shocks? How does modeling economic trends surrounding these shocks differ from modeling economic trends in times without shocks?
 
 
 
@@ -21,9 +21,9 @@ The data was pulled from two sources. The DOW data was pulled from Yahoo Finance
 
 The second source, where all remaining data came from, was the Federal Reserve Economic Data (FRED), which is a database of economic data compiled by the Federal Reserve. FRED gets the data from a variety of sources. The sources for the ones we used are listed below:
 
-* Net Exports: This data was collected from the Bureau of Economic Analysis, which collects various economic data with the purpose of getting a better understanding of the economy and modelling, particularly for government interests. This data was collected in a quarterly format, so each observation in the original represents the data for one quarter (three months).
+* Net Exports: This data was collected from the Bureau of Economic Analysis, which collects various economic data with the purpose of getting a better understanding of the economy and modeling, particularly for government interests. This data was collected in a quarterly format, so each observation in the original represents the data for one quarter (three months).
 
-* Consumer Confidence: This is read as the University of Michigan Consumer Sentiment value, which is observed on a monthly basis. The University of Michigan periodically updates this value with the goal of modelling a form of consumer confidence in the market. 
+* Consumer Confidence: This is read as the University of Michigan Consumer Sentiment value, which is observed on a monthly basis. The University of Michigan periodically updates this value with the goal of modeling a form of consumer confidence in the market. 
 
 * CPI: This data originally came from the Bureau of Labor Statistics and is formally called the Consumer Price Index for All Urban Consumers: All Items. The data is listed monthly and was originally collected in the context of modeling, particularly for government interests.
 
