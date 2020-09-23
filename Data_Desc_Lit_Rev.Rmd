@@ -17,7 +17,9 @@ How do different external shocks affect the economy as a whole? What are the sim
 
 ## Part 2 -- Data Description
 
-The data was pulled from two sources. The DOW data was pulled from Yahoo Finance, which keeps up to date documentation of stock market data, in this case the DOW. The original data comes from ICE Data Services and is collected with the goal of general economic data collection. The data that we pulled considers the DOW values monthly, though data is available on a more frequent basis with updates happening in real time, making each case a particular month of a particular year. We also pulled the daily data, primarily for EDA purposes.
+The data was pulled from two sources. In both cases, the data range ends at approximately the present and extends back to varying time periods as early the 1940's and as late as the beginning of the 1980's. When we pulled the data, we chose to only take data beginning in 1980's in order to make the time periods consistent for all of our variables. Also keep in mind that every individual data source listed contains only two variables: the variable of interest and the date, hence the need to merge a large number of data sources. 
+
+The DOW data was pulled from Yahoo Finance, which keeps up to date documentation of stock market data, in this case the DOW. The original data comes from ICE Data Services and is collected with the goal of general economic data collection. The data that we pulled considers the DOW values monthly, though data is available on a more frequent basis with updates happening in real time, making each case a particular month of a particular year. We also pulled the daily data, primarily for EDA purposes.
 
 The second source, where all remaining data came from, was the Federal Reserve Economic Data (FRED), which is a database of economic data compiled by the Federal Reserve. FRED gets the data from a variety of sources. The sources for the ones we used are listed below:
 
