@@ -1,0 +1,94 @@
+---
+title: "Capstone_EDA_Draft"
+author: "Leah Hunt"
+date: "9/23/2020"
+output: html_document
+---
+
+```{r}
+library(lubridate)
+library(ggplot2)
+library("tidyverse")
+library("cluster")
+library("factoextra")
+data <- read.table("economicData.txt", header = TRUE)
+```
+
+```{r}
+for(i in c(5, 8:15)){
+  plot <- ggplot(aes(x = ymd(DATE), y = data[,i]), data = data) +
+    geom_point() +
+    geom_smooth() + 
+    ylab(colnames(data)[i])
+  print(plot)
+}
+
+```
+
+
+Random clustering stuff that you can ignore
+
+
+```{r}
+fviz_nbclust(na.omit(data)[,c(5, 8:15)], kmeans, method="wss")
+```
+
+
+
+```{r}
+k2<-stats::kmeans(na.omit(data)[,c(5, 8:15)], centers=3, nstart=25)
+results <- data.frame(DATE = na.omit(data)$DATE, cluster = k2$cluster)
+plot(x = ymd(results$DATE), y = results$cluster, pch = 20)
+```
+
+
+```{r}
+k2<-stats::kmeans(na.omit(data)[,c(5, 8:15)], centers=4, nstart=25)
+results <- data.frame(DATE = na.omit(data)$DATE, cluster = k2$cluster)
+plot(x = ymd(results$DATE), y = results$cluster, pch = 20)
+```
+
+
+Slightly more interesting: considers differences between days instead of nominal values
+
+```{r}
+dataDiffs <- data
+for(col in 2:ncol(data)){
+  for(row in 2:nrow(data)){
+    dataDiffs[row, col] <- data[row, col] - data[row-1, col]
+  }
+}
+```
+
+```{r}
+dataDiffs <- na.omit(dataDiffs)
+```
+
+```{r}
+for(i in c(5, 8:15)){
+  plot <- ggplot(aes(x = ymd(DATE), y = dataDiffs[,i]), data = dataDiffs) +
+    geom_point() +
+    geom_smooth() + 
+    ylab(colnames(dataDiffs)[i])
+  print(plot)
+}
+
+```
+
+Not as interesting; just me playing around with clustering again (possibly interpretable)
+```{r}
+fviz_nbclust(dataDiffs[,c(5, 8:15)], kmeans, method="wss")
+```
+
+```{r}
+for(x in 4:5){
+k2<-stats::kmeans(dataDiffs[,c(5, 8:15)], centers=x, nstart=25)
+results <- data.frame(DATE = dataDiffs$DATE, cluster = k2$cluster)
+plot(x = ymd(results$DATE), y = results$cluster, pch = 20)
+plot(x = ymd(results$DATE[1:173]), y = results$cluster[1:173], pch = 20)
+plot(x = ymd(results$DATE[173:273]), y = results$cluster[173:273], pch = 20)
+plot(x = ymd(results$DATE[273:373]), y = results$cluster[273:373], pch = 20)
+plot(x = ymd(results$DATE[373:473]), y = results$cluster[373:473], pch = 20)
+
+}
+```
