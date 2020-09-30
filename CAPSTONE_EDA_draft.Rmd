@@ -11,8 +11,40 @@ library(ggplot2)
 library("tidyverse")
 library("cluster")
 library("factoextra")
+library(tidyr)
 data <- read.table("economicData.txt", header = TRUE)
 ```
+```{r}
+head(data)
+```
+
+
+Create a nice table to describe variables:
+```{r}
+date <- c("DATE", "", "Date on which observations were taken; reported as the first of the month")
+dow <- c("DOW", "Dollars", "Gives the value of the DOW Jones as of closing on a particular date")
+netexp <- c("NETEXP", "Billions of dollars", "US exports minus US imports")
+unemployment <- c("unemployment", "", "US unemployment rate (unemployed/total people)")
+oil <- c("oil", "dollars/barrel", "Price of oil; based out of West Texas")
+gold <- c("gold", "dollers/ounce", "Price of gold; based on London Bullion Market")
+cpi <- c("cpi", "relative to 1982-1984" , "Consumer price index; amount that 1 dollar is worth in 1982-1984 dollars")
+ffr <- c("ffr", "", "Federal Funds Rate  set by the Federal Reserve")
+gdp <- c("gdp", "Billions of 2012 adjusted dollars", "Real Gross Domestic Product")
+cc <- c("consumer_confidence", "", "Consumer confidence using the University of Michigan Consumer Sentiment index with 1966 as the base year")
+
+varExplanations <- matrix(c(date, dow, netexp, unemployment, oil, gold, cpi, ffr, gdp, cc), ncol = 3, byrow = TRUE)
+varExplanations <- as.data.frame(varExplanations)
+#varExplanations
+colnames(varExplanations) <- c("Variable Name", "Unit", "Description")
+knitr::kable(varExplanations, 
+             caption = "Explanation of the meanings of all variables",
+             align = c('c', rep('l', 2))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position")
+```
+
+
+
 
 ```{r}
 for(i in c(5, 8:15)){
@@ -92,3 +124,6 @@ plot(x = ymd(results$DATE[373:473]), y = results$cluster[373:473], pch = 20)
 
 }
 ```
+
+
+
