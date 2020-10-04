@@ -109,6 +109,9 @@ sesameLong$Type[sesameLong$Type=="preform"] <- "Forms"
 sesameLong$Type[sesameLong$Type=="prenumb"] <- "Numbers"
 sesameLong$Type[sesameLong$Type=="prerelat"] <- "Relationships"
 sesameLong$Type[sesameLong$Type=="preclasf"] <- "Classification"
+sesameTestScores <- data.frame(test = c(sesameLongPre$Pre, sesameLongPost$Post), 
+                               score = c(sesameLongPre$ScorePre,
+                                         sesameLongPost$ScorePost))
 ```
 
 There were no clear errors or missing values in the dataset as presented. Table 2 shows the descriptive statistics for the relevant variables to our study with the index numbers corresponding to the positions from Table 1. Table 2 shows that the standard deviation values of postlet, prelet, postnumb and prenumb is much higher than other variables, which means that there are significant differences in the children’s knowledge of letters and numbers, both before and after viewing the Sesame Street television series. Thus, when combined with the commonality of these tests as a metric for knowledge, we justify placing our primary focus on score differences in letters and numbers as opposed to the other categories.
@@ -181,35 +184,12 @@ plot<-ggplot2::ggplot(aes(x = ScorePre, y=ScorePost, color= Type), data= sesameL
 plot
 ```
 
-```{r fig.height=3,fig.weight=4, fig.cap ="This plot shows the ages and genders of the participants in each viewing category. Notice that the age and gender distribution is relatively similar, though not exactly the same, for all four viewing categories."}
-gender <- sesame$sex
-gender[gender==0] <- "Male"
-gender[gender==1] <- "Female"
-gender <- as.factor(gender)
-plot<-ggplot2::ggplot(aes(x = age, fill= gender), data= sesame) +
-        geom_histogram(binwidth = 4) + 
-        facet_wrap(facet = vars(viewcat)) +
-        xlab("Age (months)") + 
-        ylab('Number of children') +
-        ggtitle("Figure 2: Distribution of Age and Gender")+
-        theme(axis.text = element_text(size=15),
-              plot.title = element_text(size=15, face="bold",hjust=0.5),
-              axis.title = element_text(size=15),
-              panel.background = element_rect(fill = "white", color="black"),
-              legend.text = element_text(size=14),
-              legend.title = element_text(size=16)
-        )
-plot
 
-sesameTestScores <- data.frame(test = c(sesameLongPre$Pre, sesameLongPost$Post), 
-                               score = c(sesameLongPre$ScorePre,
-                                         sesameLongPost$ScorePost))
-```
 
 ```{r fig.height=3,fig.weight=10, fig.cap = "This figure shows the distributions of all of the test score types. Notice that they have different distributions, especially in letters and numbers where the posttest scores appear bimodal and the pretest scores appear skewed."}
-plot<-ggplot2::ggplot(aes(x = score), data= sesameTestScores) +
+plot<-ggplot2::ggplot(aes(x = score), data= sesameTestScores[sesameTestScores$test %in% c("prelet", "postlet", "prenumb", "postnumb"),]) +
         geom_histogram(bins=10) + 
-        facet_wrap(facet = vars(test), ncol = 6) +
+        facet_wrap(facet = vars(test), ncol = 2) +
         xlab("Score") + 
         ylab('Number of children') +
         ggtitle("Distribution of Test Scores")+
@@ -225,10 +205,9 @@ plot
 
 ```
 
-Next, we are interested in the children’s age and gender in each viewing level group. Figure 2 shows the relationships between children’s age and gender and take the viewing level in consideration at the same time. The x-axis represents the children’s age in months and the y-axis represents the number of children in each viewing group. The red denotes the female and the green denotes the male. It can be seen that the distributions of children’s age and gender are significantly different in each viewing group.
+When considering the analysis, we may question if variables, in particular gender and age, will affect our results. These variables are explored in Appendix 2 in Figure 5, which shows that while there are some variations in both variables between viewing categories, they are rather similar. 
 
-
-Finally, take a look at the distributions of scores change before and after viewing the tv series. As is shown in Figure 3, the distributions of all the scores before and after viewing the tv series are all different. And for the same kind of cognitive ability, the distribution has also changed after children has watched the Sesame Street. Thus, it can be concluded that the Sesame Street tv series has truly influence on children’s all types of cognitive abilities.
+Finally, take a look at the distributions of scores change before and after viewing the tv series. As is shown in Figure 2, the distributions of scores of letters and numbers before and after watching the show do appear to change. The post test scores do appear overall greater than the pretest scores, though in both cases the post test case takes on a mildly bimodal distribution relative to the positively skewed distribution of the pretest scores. A comparison of these distributions to those of the other test types from the study can be found in Figure 6 in Appendix 2. We see that the increasing nature is constant to these other distributions but the bimodal distribution of the post test scores are unique to numbers and letters. One possible theory for this difference is that of these skills, letters and numbers are least likely to be learned from sources beyond sesame street and thus the distributions change more drastically, though this theory is not adequately addressed by the data and thus is solely a possible explanation that we suggest.
 
 
 
@@ -240,16 +219,18 @@ In this section, we use postlet and postnumb as response variable, respectively,
 First, build a MLR model using postlet as response variable, prelet, viewcat, sex, age, the interaction term of sex and prelet, the interaction term of sex and viewcat , the interaction term of sex and age, the interaction term of age and prelet as explanatory variables. The summary of this MLR model is shown.
 
 ```{r fig.cap="Figure 4: The summary of this MLR model related to postlet"}
-#mod <- lm(postlet ~ prelet + as.factor(viewcat) + sex + age + sex*prelet + sex*as.factor(viewcat) + sex*age + prelet*as.factor(viewcat) + age*as.factor(viewcat) + prelet*age + sex*prelet*as.factor(viewcat) + prelet*age*as.factor(viewcat) + sex*age*as.factor(viewcat) + prelet*age*sex, data = sesame)
+#mod <- lm(postlet ~ prelet + viewcat + sex + age + sex*prelet + sex*viewcat + sex*age + prelet*viewcat + age*viewcat + prelet*age + sex*prelet*viewcat + prelet*age*viewcat + sex*age*viewcat + prelet*age*sex, data = sesame)
 
-dataLet <- sesame[,c("prelet", "postlet", "sex", "peabody", "age", "viewcat")]
-dataLet$viewcat <- as.factor(dataLet$viewcat)
-dummies <- dummyVars(postlet~., data=dataLet)
-letters<-predict(dummies, newdata=dataLet)
-letters<-data.table(letters)
-letters$postlet<- dataLet$postlet
-letters <- letters[,-"viewcat.1"]
-mod <- lm(postlet~. + viewcat.2*age, data = letters)
+mod <- lm(postlet ~ prelet + viewcat + sex + age + sex*prelet + sex*viewcat + sex*age, data = sesame)
+
+# dataLet <- sesame[,c("prelet", "postlet", "sex", "peabody", "age", "viewcat")]
+# dataLet$viewcat <- as.factor(dataLet$viewcat)
+# dummies <- dummyVars(postlet~., data=dataLet)
+# letters<-predict(dummies, newdata=dataLet)
+# letters<-data.table(letters)
+# letters$postlet<- dataLet$postlet
+# letters <- letters[,-"viewcat.1"]
+# mod <- lm(postlet~. + viewcat.2*age, data = letters)
 out<-broom::tidy(mod)
 knitr::kable(out)
 ```
@@ -268,17 +249,22 @@ From figure 3, it can be observed that the coefficient of viewcat is significant
 Next, consider the postnumb as response variable. Build a MLR model using postnumb as response variable, prenumb, viewcat, sex, age, the interaction term of sex and prenumb, the interaction term of sex and viewcat, the interaction term of sex and age as explanatory variables. The summary of this MLR model is shown..
 
 ```{r fig.cap="Figure 6: The summary of this MLR model related to postnumb"}
-# mod2 <- lm(postlet ~ prelet + viewcat + sex + age + sex*prelet + sex*viewcat + sex*age + sex*viewcat + age*prelet, data = sesame)
-datanumb <- sesame[,c("prenumb", "postnumb", "sex", "peabody", "age", "viewcat")]
-datanumb$viewcat <- as.factor(datanumb$viewcat)
-dummies <- dummyVars(postnumb~., data=datanumb)
-numbers<-predict(dummies, newdata=datanumb)
-numbers<-data.table(numbers)
-numbers$postnumb<- datanumb$postnumb
-numbers <- numbers[,-"viewcat.1"]
-numbers$sex <- numbers$sex - 1
+#  mod2 <- lm(postlet ~ prelet + viewcat + sex + age + sex*prelet + 
+# sex*viewcat + sex*age + sex*viewcat + age*prelet, data = sesame)
 
-mod2 <- lm(postnumb~. + viewcat.2*sex + viewcat.3*sex, data = numbers)
+ mod2 <- lm(postnumb ~ prenumb + viewcat + sex + age + sex*prenumb + 
+sex*viewcat + sex*age, data = sesame)
+
+# datanumb <- sesame[,c("prenumb", "postnumb", "sex", "peabody", "age", "viewcat")]
+# datanumb$viewcat <- as.factor(datanumb$viewcat)
+# dummies <- dummyVars(postnumb~., data=datanumb)
+# numbers<-predict(dummies, newdata=datanumb)
+# numbers<-data.table(numbers)
+# numbers$postnumb<- datanumb$postnumb
+# numbers <- numbers[,-"viewcat.1"]
+# numbers$sex <- numbers$sex - 1
+
+#mod2 <- lm(postnumb~. + viewcat.2*sex + viewcat.3*sex, data = numbers)
 out<-broom::tidy(mod2)
 knitr::kable(out)
 ```
@@ -333,7 +319,7 @@ Assumption checks for model1 with using postlet as response variable, prelet, vi
 
 we can observe from residuals vs fitted plot that the residuals are like white noise pattern. From normal Q-Q plot we can conclude that the residuals are normally distributed pattern. Thus, the multiple linear regression model of postlet does not violate assumptions for inference.
 
-```{r}
+```{r fig.cap = "These plots show the assumptions tests for the letters model. We see that the normality assumption is fairly well met as the points on the normality plot are mostly within the error bands. The homoscedasticity assumption is fairly well met as the errors are mostly distributed randomly around 0. The final two plots show that there are no noticable patterns in the response or residuals by index, implying that the independence and linearity assumptions respectively are relatively well met."}
 par(mfrow=c(2,2))
 # mod <- lm(postlet ~ prelet + as.factor(viewcat) + sex + age + sex*prelet + sex*as.factor(viewcat) + sex*age + prelet*as.factor(viewcat) + age*as.factor(viewcat) + prelet*age + sex*prelet*as.factor(viewcat) + prelet*age*as.factor(viewcat) + sex*age*as.factor(viewcat) + prelet*age*sex, data = sesame)
 a <- car::qqPlot(
@@ -351,7 +337,7 @@ Assumption checks for the second model that using postnumb as response variable,
 
 We can observe from residuals vs fitted plot that the residuals are like white noise pattern. From normal Q-Q plot we can conclude that the residuals are normally distributed pattern. Thus, the multiple linear regression model of postnumb does not violate assumptions for inference
 
-```{r}
+```{r fig.cap = "These plots show the assumptions tests for the letters model. We see that the normality plot has some mild devations from the error bands, but these deviations are mild enough that we will consider the normality assumption to be reasonably met. The homoscedasticity assumption is fairly well met as the errors are mostly distributed randomly around 0. The final two plots show that there are no noticable patterns in the response or residuals by index, implying that the independence and linearity assumptions respectively are relatively well met."}
 par(mfrow=c(2,2))
 # mod2 <- lm(postlet ~ prelet + viewcat + sex + age + sex*prelet + 
 #              sex*viewcat + sex*age + sex*viewcat + age*prelet, data = sesame)
@@ -366,6 +352,53 @@ plot(mod2, which = 1, pch = 19)
 plot(mod2$residuals)
 plot(sesame$postlet)
 ```
+
+
+## Appendix 2: Additional Plots
+
+```{r fig.height=3,fig.weight=4, fig.cap ="This plot shows the ages and genders of the participants in each viewing category. Notice that the age and gender distribution is relatively similar, though not exactly the same, for all four viewing categories."}
+gender <- sesame$sex
+gender[gender==0] <- "Male"
+gender[gender==1] <- "Female"
+gender <- as.factor(gender)
+plot<-ggplot2::ggplot(aes(x = age, fill= gender), data= sesame) +
+        geom_histogram(binwidth = 4) + 
+        facet_wrap(facet = vars(viewcat)) +
+        xlab("Age (months)") + 
+        ylab('Number of children') +
+        ggtitle("Distribution of Age and Gender")+
+        theme(axis.text = element_text(size=15),
+              plot.title = element_text(size=15, face="bold",hjust=0.5),
+              axis.title = element_text(size=15),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+plot
+
+```
+
+```{r fig.height=3,fig.weight=10, fig.cap = "This figure shows the distributions of all of the test score types. Notice that they have different distributions, especially in letters and numbers where the posttest scores appear bimodal and the pretest scores appear skewed."}
+plot<-ggplot2::ggplot(aes(x = score), data= sesameTestScores) +
+        geom_histogram(bins=10) + 
+        facet_wrap(facet = vars(test), ncol = 6) +
+        xlab("Score") + 
+        ylab('Number of children') +
+        ggtitle("Distribution of Test Scores")+
+        theme(axis.text = element_text(size=10),
+              plot.title = element_text(size=10, face="bold",hjust=0.5),
+              axis.title = element_text(size=10),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+
+```
+
+
+\newpage
 
 ### R Script
 ```{r codeAppendix, ref.label = knitr::all_labels(), echo = TRUE, eval = FALSE}
