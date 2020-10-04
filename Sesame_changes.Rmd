@@ -1,0 +1,30 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+### Leah's Changes:
+* Changed the variables table to remove the variables that weren't relevant (like id)
+* Made sure that the sex variable rescaled to 0-1, particularly for the tables
+* Line 80: tried to make the wording more clear; not sure if I succeeded
+* Rewrote explanations of EDA plots due to adding of captions
+* Started to lower level of "certainty" in recommendations, which might be related to the "wrong" model...
+* Last paragraph of intro section: I rewrote a little to make clearer why we chose the path we did (i.e. why not consider all simultaneously); this may need edited, but it is a start
+
+
+OTHER SUGGESTION: Discuss figure 2 and 3; I think 2 belongs in the appendix as a discussion of potential confounding (i.e. are age and gender distributed well?) I think Figure 3, if in the body of the report should be only letters and numbers to emphasize that we are dealing with "interesting" distribution shapes; the full plot can stay in the appendix along with a small discussion on why we couldn't normalize.
+
+Discuss analysis section; I think the wrong table may have been used; double check this!!!
+
+is it pretest, pre test, or pre-test? (same for post) 
+
+Note that some of the code wraps wrong on knit; I started reformatting in text code; there is a way to not have to retype all the code at the end
+
+
+TO DO:
+Move figures (fig 3 split and fig 2 fully to appendix)
+Re-explain models
+add measurement unit to variable table
+little more explanation in introduction
+Update recommendations
+
