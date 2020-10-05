@@ -1,0 +1,451 @@
+---
+title: "Sesame's Effect on Knowledge of Number and Letters"
+author: "Jiahui Cheng, Leah Hunt, Ziling Zhang"
+date: "September 21, 2020"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+```{r Front Matter, include=FALSE}
+
+# clean up & set default chunk options
+rm(list = ls())
+knitr::opts_chunk$set(echo = FALSE)
+
+# packages
+library(tidyverse) 
+library(ggplot2)
+library(tidyr)
+library(broom)
+library(data.table)
+library(caret)
+sesame <- read.csv("sesame.csv",sep=",",header=T)
+```
+
+
+# Project Description
+
+Sesame Street is an American educational children's television series that combines live action, sketch comedy, animation and puppetry. It is produced by Sesame Workshop (known as the Children's Television Workshop (CTW) ) . The program is known for its images communicated through the use of Jim Henson's Muppets, and includes short films, with humor and cultural references. 
+
+
+The format of Sesame Street consists of a combination of commercial television production elements and techniques which have evolved to reflect the changes in American culture and the audience's viewing habits. The format of the show was designed to hold young children’s attention through action oriented, short duration presentations teaching specific preschool cognitive skills and some social skills. Each show was one hour and involved much repetition of concepts within and across shows. With the creation of Sesame Street, producers and writers of a children's television show used, for the first time, educational goals and a curriculum to shape its content. It was also the first time a show's educational effects were formally studied. 
+
+
+In order to figure out whether to permit generalization to the populations of children of most interest to the producers, the Children's Television Workshop carried out an evaluation to the children who were sampled from five different sites in the US. Both before and after viewing the series the children were tested on a variety of cognitive variables (including knowledge on body parts, knowledge of letters, knowledge of forms, knowledge of numbers, knowledge of relations and knowledge of classifications skills) and collected the Sesame Street dataset.
+  
+
+As on the client's request, the report will focus on the effect of Sesame Street on improvement of test scores. While the study included six different score types, we have decided to focus on only two major categories that are commonly regarded metrics in intelligence: letters and numbers. This decision was made in light of the varying scales used for each test and limited knowledge on the general distribution of these scores and will be further justified within our report. The analysis will be done using a multilinear regression model fit individually for our two test types of interest with the response variable as the post test score and the predictors as the amount of sesame street watched as well as other variables that are expected to make a contribution to post test scores, such as the pre test score.
+
+The results of the study will be significant in showing the influences on children intelligence from Sesame Street. Following studies can conduct on how and why Sesame Street affect children or does similar TV shows have the same effect. 
+
+
+## Research Questions
+
+
+**Question 1:**  Is Sesame Street effective in improving the knowledge of letters for 3-5 year old children?
+
+**Question 2:**  Is Sesame Street effective in improving the knowledge of numbers for 3-5 year old children?
+
+
+## Variables
+
+We analyzed all of the variables collected in the study. Table 1 provides the name and a brief description of each variable. 
+
+```{r fig.cap= "The table includes the no, name, description, units, and scales for each variable"}
+# Variable table
+variable<-data.frame(
+  No = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20),
+  Variable=c("ID","SITE","SEX","AGE","VIEWCAT","SETTING","VIEWING","PREBODY",
+             "PRELET","PREFORM","PRENUMB","PRERELAT","PRECLASF","POSTBODY",
+             "POSTLET","POSTFORM","POSTNUMB","POSTREL","POSTCLAS","PEABODY"), 
+  Description = 
+    c("identification Number",
+      "Sampling sites",
+      "Gender","Age",
+      "Viewing frequency from rare to frequent",
+      "Location that Sesame Steet was watched",
+      "Condition on whether children are encouraged to watch or not",
+      "Pretest on knowledge about body parts",
+      "Pretest on knowledge about letters","Pretest on knowledge about forms",
+      "Pretest on knowledge about numbers",
+      "Pretest on knowledge of relational terms",
+      "Pretest on knowledge of classification skills",
+      "Posttest knowledge on body parts",
+      "Posttest knowledge of letters",
+      "Posttest knowledge of forms",
+      "Posttest knowledge of numbers","Posttest knowledge of relations",
+      "Posttest knowledge of classification skills","Mental age scores"), 
+  Units = c('','','months','','','','','points','points',
+            'points','points','points','points','points',
+            'points','points','points','points','points',
+            'points'), Scale = c('','1-5 five sites',
+                                 'Male-1 Female-2',
+                                 '36-60,3-5 years','1-rare to 5-more than 5 times watch','1-home 2-school',
+                                 '1-encouraged 2-not encouraged','1-32','1-58','1-20','1-54','1-17',
+                                 '1-24','1-32','1-58','1-20','1-54','1-17','1-24',''))
+knitr::kable(variable,
+             caption = "Variable Attributes",
+             align = c('c', rep('l', 7)),format="latex") %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 7, latex_options = "HOLD_position")
+
+```
+
+
+# Exploratory Data Analysis (EDA)
+```{r}
+# Transform Data
+sesame$sex <- sesame$sex - 1
+sesameLongPre <- pivot_longer(sesame, 
+                              cols = c("prebody", "prelet", "preform", 
+                                       "prenumb", "prerelat", "preclasf"), 
+                              names_to = "Pre", 
+                              values_to = "ScorePre")
+sesameLongPost <- pivot_longer(sesame, 
+                               cols = c("postbody", "postlet",    "postform",  
+                                        "postnumb",   "postrelat",  "postclasf"), 
+                               names_to = "Post", values_to = "ScorePost")
+sesameLong <- data.frame(Type = sesameLongPre$Pre, 
+                         Post = sesameLongPost$Post, 
+                         ScorePre = sesameLongPre$ScorePre, 
+                         ScorePost = sesameLongPost$ScorePost, 
+                         Category = as.factor(sesameLongPre$viewcat))
+sesameLong$Type[sesameLong$Type=="prebody"] <- "Body Parts"
+sesameLong$Type[sesameLong$Type=="prelet"] <- "Letters"
+sesameLong$Type[sesameLong$Type=="preform"] <- "Forms"
+sesameLong$Type[sesameLong$Type=="prenumb"] <- "Numbers"
+sesameLong$Type[sesameLong$Type=="prerelat"] <- "Relationships"
+sesameLong$Type[sesameLong$Type=="preclasf"] <- "Classification"
+sesameTestScores <- data.frame(test = c(sesameLongPre$Pre, sesameLongPost$Post), 
+                               score = c(sesameLongPre$ScorePre,
+                                         sesameLongPost$ScorePost))
+```
+
+There were no clear errors or missing values in the dataset as presented. Table 2 shows the descriptive statistics for the relevant variables to our study with the index numbers corresponding to the positions from Table 1. 
+
+Table 2 shows that the standard deviation values of prebody, postlet, prelet, postnumb and prenumb is much higher than other variables, which means that there are significant differences in the children’s knowledge of letters and numbers, both before and after viewing the Sesame Street television series. Thus, when combined with the commonality of these tests as a metric for knowledge, we justify placing our primary focus on score differences in letters and numbers as opposed to the other categories.
+
+```{r fig.cap="The table displays descriptive statistics for variables, including minimum, maximum, median, mean value, standard deviation"}
+dt<-tidyr::pivot_longer(sesame, 1:23, names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df <- data.frame(
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+df <- df[c(1,5:17, 20),]
+df$SAV=kableExtra::cell_spec(df$SAV, background  = ifelse(df$SAV > 70, "yellow", "white"))
+
+knitr::kable(df, escape=F,
+             caption = "Statistics by Variable",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+
+```
+
+To further understand the relationship between pre- and post- test scores, we make Table 3 and Figure 1. Table 3 shows the means and variance of difference. Corresponding to table 2, tests on letters and numbers show greater difference and variation. Others tests show similar and minor patterns. 
+
+```{r fig.cap="The table displays difference for all five tests measurements"}
+
+sesame$bodydiff=sesame$postbody-sesame$prebody
+sesame$letdiff=sesame$postlet-sesame$prelet
+sesame$formdiff=sesame$postform-sesame$preform
+sesame$numbdiff=sesame$postnumb-sesame$prenumb
+sesame$relatdiff=sesame$postrelat-sesame$prerelat
+sesame$clasfdiff=sesame$postclas-sesame$preclasf
+df2 <- data.frame(Tests=c('Body','Letters','Forms',
+                          'Numbers','RelationalTerms','Classification'),                  Mean=c(mean(sesame$bodydiff),                  mean(sesame$letdiff),mean(sesame$formdiff),                                mean(sesame$numbdiff),mean(sesame$relatdiff),mean(sesame$clasfdiff)), 
+                  SAV=c(var(sesame$bodydiff),var(sesame$letdiff),
+                        var(sesame$formdiff),var(sesame$numbdiff),
+                        var(sesame$relatdiff),
+                        var(sesame$clasfdiff)))
+df2$SAV=kableExtra::cell_spec(df2$SAV, 
+                              background  = ifelse(df2$SAV > 70, "yellow", "white"))
+df2$Mean=kableExtra::cell_spec(df2$Mean, 
+                               background  = ifelse(df2$Mean > 9, "yellow", "white"))
+knitr::kable(df2, escape=F,
+             caption = "Pre/Post Difference in six tests ",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+
+```
+
+
+Figure 1 also shows the relationship between the pre- and post- test scores for each category at each viewing level. In the figure, we see that as viewing level increases, amount of improvement, shown on the graph as distance above the black line, appears to increase. We also see that the scoring patterns do vary somewhat between the different test types with scores like Classification and Relationships clustering around lower score numbers and scores like Letters and Numbers appearing as larger numbers, with often larger increases, and with much more variation, as we already saw. In spite of these wide variations, some of which is a result of the varying scoring scales of the different tests, it does appear that all of the variables at least loosely follow the trend of increasing improvement as the viewing category increases
+
+```{r fig.height=3,fig.weight=4, fig.cap = "These charts plot pre- and post- test scores against one another by test type and viewing category. Points above the black line show improvement while points below the black line show a decrease in scores between the two tests."}
+par(mfrow=c(2,2))
+plot<-ggplot2::ggplot(aes(x = ScorePre, y=ScorePost, 
+                          color= Type), data= sesameLong) +
+        geom_point() + 
+        geom_abline() +
+        facet_wrap(facet = vars(Category)) +
+        xlab("Prescores") + 
+        ylab('Postscores') +
+        ggtitle("Scoring Changes")+
+        theme(axis.text = element_text(size=15),
+              plot.title = element_text(size=15, face="bold",hjust=0.5),
+              axis.title = element_text(size=15),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+```
+
+
+
+```{r fig.height=3,fig.weight=10, fig.cap = "This figure shows the distributions of all of the test score types. Notice that they have different distributions, especially in letters and numbers where the posttest scores appear bimodal and the pretest scores appear skewed."}
+plot<-ggplot2::ggplot(aes(x = score), 
+                      data= sesameTestScores[sesameTestScores$test 
+                                             %in% c("prelet", "postlet", "prenumb", "postnumb"),]) +
+        geom_histogram(bins=10) + 
+        facet_wrap(facet = vars(test), ncol = 2) +
+        xlab("Score") + 
+        ylab('Number of children') +
+        ggtitle("Distribution of Test Scores")+
+        theme(axis.text = element_text(size=10),
+              plot.title = element_text(size=10, face="bold",hjust=0.5),
+              axis.title = element_text(size=10),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+
+```
+
+When considering the analysis, we may question if variables, in particular gender and age, will affect our results. These variables are explored in Appendix 3 in Figure 6, which shows that while there are some variations in both variables between viewing categories, they are rather similar. 
+
+Finally, take a look at the distributions of scores change before and after viewing the tv series. As is shown in Figure 2, the distributions of scores of letters and numbers before and after watching the show do appear to change. The post test scores do appear overall greater than the pretest scores, though in both cases the post test case takes on a mildly bimodal distribution relative to the positively skewed distribution of the pretest scores. A comparison of these distributions to those of the other test types from the study can be found in Figure 7 in Appendix 3. We see that the increasing nature is constant to these other distributions but the bimodal distribution of the post test scores are unique to numbers and letters. One possible theory for this difference is that of these skills, letters and numbers are least likely to be learned from sources beyond sesame street and thus the distributions change more drastically, though this theory is not adequately addressed by the data and thus is solely a possible explanation that we suggest.
+
+
+
+
+# Statistical Analysis 
+
+In this section, we use postlet and postnumb as response variables, respectively, and use other variables as explanatory variables. In Appendix 1, we plot the relationship between pre- and postscores. The results tend to be weak linear relationships. Thus, we decide to build two multiple linear regression models related to postlet and postnumb, separately. And do research on the relationships between postlet (postnumb) with other variables. For both models, the explanatory variables we have include: presocres on letters (prelet), frequency of children watching the show (viewcat), sex, age. Since sex is a categorical variable, stating 0 as male and 1 as female, the full model includes interaction terms between sex and other explanatory variables. 
+
+Among them, we select *prelet* since it is highly correlated to *postlet*. Their difference is our target study value. We select *viewcat* since it determines the level of watching Sesame Street. If the higher the watching frequency, the better the difference, our result of study will be positive on Sesame Street effects. We select *age* and *sex* since they are unavoidable differences we must include. 
+
+The assumption checks satisfy as shown in Appendix 2.
+
+## Research Question 1 on Letters
+
+First, build a MLR model using postlet as response variable.  The summary of this MLR model is shown.
+
+```{r fig.cap="The summary of this MLR model related to postlet"}
+
+mod <- lm(postlet ~ prelet  + viewcat + sex + 
+            age + sex*prelet + sex*viewcat + sex*age, data = sesame)
+out<-broom::tidy(mod)
+knitr::kable(out)
+```
+
+The table shows in total seven variables which include three interaction terms. The indicator we evaluate significance is the p-value. P-value means the probability we receive our samples if the variable is not significant or important. Here we find our p-values for *prelet* and *viewcat* are both close to zero. Thus, both variables are significant in the prediction of *postlet*. On the contrary, *age* and *sex* and other sex ineteraction terms show high p-values. Thus, these five variables might not be significant in *postlet* scores.
+
+The result of the multiple linear regression model is:
+\[
+postlet = -7.09+ 0.7 prelet + 5.03 viewcat + 0.34 sex + 0.18 age
+\newline\]
+\[
+ + 0.039 prelet*sex + 0.029 viewcat*sex + 0.001 sex*age 
+\]
+
+The R-squared value for our model above is 48%, which means the prediction values of our model explain 48% of the true values. It doesn't show a valid enough model to predict the postscores on Letters. However, considering our research question that whether Sesame Street is effective in knowledge of letters, the answer from our result assumes positive. 
+
+Moreover, the coefficient of *viewcat* is 5.03, which means while other variables remain unchanged, one higher level of frequency in watching Sesame Street, around five points improvement will show on *postlet* scores. It is quite a huge change.
+
+## Research Question 2 on Numbers
+
+Next, consider the *postnumb* as response variable. The summary of this MLR model is shown.
+
+```{r fig.cap="The summary of this MLR model related to postnumb"}
+
+ mod2 <- lm(postnumb ~ prenumb + viewcat + sex + age + sex*prenumb + 
+              
+              sex*viewcat + sex*age, data = sesame)
+
+out<-broom::tidy(mod2)
+knitr::kable(out)
+```
+
+Here we find our p-values for *prenumb* , *viewcat* , and *prenumb x sex* are smaller below the significan level 0.1. Thus, these three variables are significant in the prediction of *postnumb*. On the contrary, *age* and *sex* and other two sex interaction terms show high p-values. Thus, they might not be significant in *postnumb* scores. The significance of *prenumb x sex* represents that the effects of *prenumb* in *postnumb* may depend on the gender. Since female is coded as 1, while male 0, here we may assume that female tends to have higher scores on pretest of numbers.
+
+The multiple linear regression model is:
+
+\[
+postnumb = -2.16+ 0.57 prenumb + 3.24 viewcat + 2.90 sex 
+  + 0.22 age 
+  \newline\]
+  \[+ 0.22 prenumb*sex - 0.046 viewcat*sex – 0.13 sex*age
+\]
+
+The R-squared value for our model above is 54%, which means the prediction values of our model explain 54% of the true values. It is a better model compared to the model of Letters. We also find one more significant term in Numbers scores. 
+
+Considering our research question that whether Sesame Street is effective in knowledge of numbers, the answer from our result assumes positive. 
+
+Moreover, the coefficient of *viewcat* is 3.24, which means while other variables remain unchanged, one higher level of frequency in watching Sesame Street, around three points improvement will show on *postnumb* scores. It is a smaller change compared to model of Letters. Thus, we might assume that Sesame Street has a better effect on Letters skills.
+
+
+
+
+# Recommendations 
+
+**Question 1:**  The first research question is about Sesame Street effective in improving the knowledge of letters for 3-5 year old children?
+
+Our analysis has provided evidence that Sesame Street is effective in improving the knowledge of letters of children as improving the knowledge of letters is highly related to the viewing level. If a child watched Sesame Street more frequently, then he or she can get a higher improvement in the knowledge of letters. 
+
+We will recommend to do a further prediction model since the model we built is around 48% R-squared. We look forward to using other models to explore the relationship of postlet scores and other factors.
+
+**Question 2:**  The second research question is about Sesame Street effective in improving the knowledge of numbers for 3-5 year old children?
+
+The Sesame Street is effective in improving the knowledge of numbers of children. And improving the knowledge of numbers is related to the viewing level and the children’s knowledge of numbers before watching the show. If a child had a good knowledge of numbers and watched Sesame Street more frequently, then he or she can get a higher improvement in the knowledge of numbers, but relatively not as effective as on letters skills.
+
+We recommend to do further analysis on gender's effect on number skills. From previous results, we found out that female seems to have a higher prenumb scores. We look forward to exploring more to understand the relationship between gender and number skills. Moreover, we can also explore a better model for prediction, while the R-squared value is 54%.
+
+
+# Limitations
+
+The analysis suggests that sesame street is effective on both number and letters abilities. However, the original experiment is done on many other aspects such as body parts. Thus, a further study on sesame's effect on other abilities is recommended.
+
+Moreover, the analysis is built on some assumptions that the client might want to clarify. First, the selection of subjects are random, not out of interest, and that selections were done independently, for instance without taking groups of siblings. Selection bias might cause the study lack of generality. Second, the scoring rules of each category were not clearly described by the client. In particular, the analysis was unable to guage the significance of a particular score on any of the tests, which also prevented any form of normalizing or combining test scores. 
+
+Overall, a suggestion to the client is to reevaluate the construction of the experiment and to make sure all assumptions above are made. We look forward to working with other potential effects of sesame street on children.
+
+
+# Resources 
+
+ https://en.wikipedia.org/wiki/Sesame_Street
+ 
+ https://www.sciencedirect.com/science/article/abs/pii/S0193397313000026
+ 
+ https://qz.com/1554895/why-kids-who-watched-sesame-street-did-better-in-school/
+
+
+
+
+\newpage
+
+# Technical Appendix  
+
+## Appendix 1: Relationships between pre- and postscores
+```{r fig.cap='These two plots show pre- and postscores relationships between numbers and letters tests.'}
+
+par(mfrow=c(1,2))
+plot(sesame$postlet~sesame$prelet,xlab='Prescores on Letters',ylab='Postscores on Letters')
+plot(sesame$postnumb~sesame$prenumb,xlab='Prescores on Numbers',ylab='Postscores on Numbers')
+```
+
+
+
+
+
+
+
+
+
+
+
+
+## Appendix 2: Assumption checks
+
+Assumption checks for model1 with using postlet as response variable, prelet, viewcat, sex, age, the interaction term of sex and other variables as explanatory variables. 
+
+we can observe from residuals vs fitted plot that the residuals are like white noise pattern. From normal Q-Q plot we can conclude that the residuals are normally distributed pattern. Thus, the multiple linear regression model of postlet does not violate assumptions for inference.
+
+```{r fig.cap = "These plots show the assumptions tests for the letters model. We see that the normality assumption is fairly well met as the points on the normality plot are mostly within the error bands. The homoscedasticity assumption is fairly well met as the errors are mostly distributed randomly around 0. The final two plots show that there are no noticable patterns in the response or residuals by index, implying that the independence and linearity assumptions respectively are relatively well met."}
+par(mfrow=c(2,2))
+a <- car::qqPlot(
+  x = mod$residuals,
+  distribution = "norm",
+  envelope = 0.97,
+  pch = 20
+)
+plot(mod, which = 1, pch = 19)
+plot(mod$residuals)
+plot(sesame$postlet)
+```
+
+Assumption checks for the second model that using postnumb as response variable, prenumb, viewcat, sex, age, the interaction term of sex and other variables as explanatory variables.
+
+We can observe from residuals vs fitted plot that the residuals are like white noise pattern. From normal Q-Q plot we can conclude that the residuals are normally distributed pattern. Thus, the multiple linear regression model of postnumb does not violate assumptions for inference
+
+```{r fig.cap = "These plots show the assumptions tests for the letters model. We see that the normality plot has some mild devations from the error bands, but these deviations are mild enough that we will consider the normality assumption to be reasonably met. The homoscedasticity assumption is fairly well met as the errors are mostly distributed randomly around 0. The final two plots show that there are no noticable patterns in the response or residuals by index, implying that the independence and linearity assumptions respectively are relatively well met."}
+par(mfrow=c(2,2))
+
+a <- car::qqPlot(
+  x = mod$residuals,
+  distribution = "norm",
+  envelope = 0.97,
+  pch = 20
+)
+
+plot(mod2, which = 1, pch = 19)
+plot(mod2$residuals)
+plot(sesame$postlet)
+```
+
+
+## Appendix 3: Additional Plots
+
+```{r fig.height=3,fig.weight=4, fig.cap ="This plot shows the ages and genders of the participants in each viewing category. Notice that the age and gender distribution is relatively similar, though not exactly the same, for all four viewing categories."}
+gender <- sesame$sex
+gender[gender==0] <- "Male"
+gender[gender==1] <- "Female"
+gender <- as.factor(gender)
+plot<-ggplot2::ggplot(aes(x = age, fill= gender), data= sesame) +
+        geom_histogram(binwidth = 4) + 
+        facet_wrap(facet = vars(viewcat)) +
+        xlab("Age (months)") + 
+        ylab('Number of children') +
+        ggtitle("Distribution of Age and Gender")+
+        theme(axis.text = element_text(size=15),
+              plot.title = element_text(size=15, face="bold",hjust=0.5),
+              axis.title = element_text(size=15),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+plot
+
+```
+
+```{r fig.height=3,fig.weight=10, fig.cap = "This figure shows the distributions of all of the test score types. Notice that they have different distributions, especially in letters and numbers where the posttest scores appear bimodal and the pretest scores appear skewed."}
+plot<-ggplot2::ggplot(aes(x = score), data= sesameTestScores) +
+        geom_histogram(bins=10) + 
+        facet_wrap(facet = vars(test), ncol = 6) +
+        xlab("Score") + 
+        ylab('Number of children') +
+        ggtitle("Distribution of Test Scores")+
+        theme(axis.text = element_text(size=10),
+              plot.title = element_text(size=10, face="bold",hjust=0.5),
+              axis.title = element_text(size=10),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+
+```
+
+
+\newpage
+
+### R Script
+```{r codeAppendix, ref.label = knitr::all_labels(), echo = TRUE, eval = FALSE}
+```
