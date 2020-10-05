@@ -18,3 +18,12 @@ Note that all changes are given in page numbers that reflect the final result, n
 * The code was also overall cleaned up, particularly to prevent bad wrapping in the code appendix
 
 
+
+** Ziling changes
+
+ * Introduction and research question (changes to 3-5 year old children) -- following Group 3 feedback
+ * two Variables table and highlight -- TA
+ * add one more table on numerical analysis
+ * Rewrote statistical Analysis
+
+
