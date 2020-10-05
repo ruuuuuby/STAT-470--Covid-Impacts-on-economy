@@ -27,7 +27,7 @@ sesame <- read.csv("sesame.csv",sep=",",header=T)
 
 # Project Description
 
-Sesame Street is an American educational children's television series that combines live action, sketch comedy, animation and puppetry. It is produced by Sesame Workshop (known as the Children's Television Workshop (CTW) ) . The program is known for its images communicated through the use of Jim Henson's Muppets, and includes short films, with humor and cultural references. 
+Sesame Street is an American educational children's television series that combines live action, sketch comedy, animation and puppetry. It is produced by Sesame Workshop (known as the Children's Television Workshop (CTW)). The program is known for its images communicated through the use of Jim Henson's Muppets, and includes short films, with humor and cultural references. 
 
 
 The format of Sesame Street consists of a combination of commercial television production elements and techniques which have evolved to reflect the changes in American culture and the audience's viewing habits. The format of the show was designed to hold young children’s attention through action oriented, short duration presentations teaching specific preschool cognitive skills and some social skills. Each show was one hour and involved much repetition of concepts within and across shows. With the creation of Sesame Street, producers and writers of a children's television show used, for the first time, educational goals and a curriculum to shape its content. It was also the first time a show's educational effects were formally studied. 
@@ -77,14 +77,14 @@ variable<-data.frame(
       "Posttest knowledge of forms",
       "Posttest knowledge of numbers","Posttest knowledge of relations",
       "Posttest knowledge of classification skills","Mental age scores"), 
-  Units = c('','','months','','','','','points','points',
-            'points','points','points','points','points',
-            'points','points','points','points','points',
-            'points'), Scale = c('','1-5 five sites',
-                                 'Male-1 Female-2',
-                                 '36-60,3-5 years','1-rare to 5-more than 5 times watch','1-home 2-school',
-                                 '1-encouraged 2-not encouraged','1-32','1-58','1-20','1-54','1-17',
-                                 '1-24','1-32','1-58','1-20','1-54','1-17','1-24',''))
+  Units = c('', '', 'months', '', '', '', '', 'points', 'points', 
+            'points', 'points', 'points', 'points', 'points', 
+            'points', 'points', 'points', 'points', 'points', 
+            'points'), 
+  Scale = c('','1-5 five sites', 'Male-1 Female-2', '36-60,3-5 years',
+            '1-rare to 5-more than 5 times watch','1-home 2-school', 
+            '1-encouraged 2-not encouraged', '1-32', '1-58', '1-20', '1-54',
+            '1-17', '1-24', '1-32', '1-58', '1-20', '1-54', '1-17', '1-24', ''))
 knitr::kable(variable,
              caption = "Variable Attributes",
              align = c('c', rep('l', 7)),format="latex") %>%
@@ -164,7 +164,10 @@ sesame$numbdiff=sesame$postnumb-sesame$prenumb
 sesame$relatdiff=sesame$postrelat-sesame$prerelat
 sesame$clasfdiff=sesame$postclas-sesame$preclasf
 df2 <- data.frame(Tests=c('Body','Letters','Forms',
-                          'Numbers','RelationalTerms','Classification'),                  Mean=c(mean(sesame$bodydiff),                  mean(sesame$letdiff),mean(sesame$formdiff),                                mean(sesame$numbdiff),mean(sesame$relatdiff),mean(sesame$clasfdiff)), 
+                          'Numbers','RelationalTerms','Classification'),              
+                  Mean=c(mean(sesame$bodydiff), mean(sesame$letdiff),
+                         mean(sesame$formdiff), mean(sesame$numbdiff),
+                         mean(sesame$relatdiff), mean(sesame$clasfdiff)), 
                   SAV=c(var(sesame$bodydiff),var(sesame$letdiff),
                         var(sesame$formdiff),var(sesame$numbdiff),
                         var(sesame$relatdiff),
@@ -237,15 +240,15 @@ Finally, take a look at the distributions of scores change before and after view
 
 # Statistical Analysis 
 
-In this section, we use postlet and postnumb as response variables, respectively, and use other variables as explanatory variables. In Appendix 1, we plot the relationship between pre- and postscores. The results tend to be weak linear relationships. Thus, we decide to build two multiple linear regression models related to postlet and postnumb, separately. And do research on the relationships between postlet (postnumb) with other variables. For both models, the explanatory variables we have include: presocres on letters (prelet), frequency of children watching the show (viewcat), sex, age. Since sex is a categorical variable, stating 0 as male and 1 as female, the full model includes interaction terms between sex and other explanatory variables. 
+In this section, we use postlet and postnumb as response variables, respectively, and use other variables as explanatory variables. In Appendix 1, we plot the relationship between pretest and post test scores. The results tend to be weak linear relationships. Thus, we decide to build two multiple linear regression (MLR) models related to postlet and postnumb, separately. For both models, the explanatory variables we have include: prescores (prelet or prenumb), frequency that children watch the show (viewcat), sex, and age. Since sex is a categorical variable, stating 0 as male and 1 as female, the full model includes interaction terms between sex and other explanatory variables, meaning that we include a term that accounts for differences in the effects of the predictors depending on the child's gender. 
 
-Among them, we select *prelet* since it is highly correlated to *postlet*. Their difference is our target study value. We select *viewcat* since it determines the level of watching Sesame Street. If the higher the watching frequency, the better the difference, our result of study will be positive on Sesame Street effects. We select *age* and *sex* since they are unavoidable differences we must include. 
+Among the variables we consider for predictors, we select *prelet* since it is highly correlated to *postlet*. We select *viewcat* since it determines the level of watching Sesame Street and will be most useful in answering our research questions since a larger coefficient on viewcat will imply a positive effect of Sesame Street. We select *age* and *sex* since they are unavoidable differences that may account for more variations in the models. 
 
 The assumption checks satisfy as shown in Appendix 2.
 
 ## Research Question 1 on Letters
 
-First, build a MLR model using postlet as response variable.  The summary of this MLR model is shown.
+First, we build a MLR model using postlet as response variable.  The summary of this MLR model is shown.
 
 ```{r fig.cap="The summary of this MLR model related to postlet"}
 
@@ -255,7 +258,7 @@ out<-broom::tidy(mod)
 knitr::kable(out)
 ```
 
-The table shows in total seven variables which include three interaction terms. The indicator we evaluate significance is the p-value. P-value means the probability we receive our samples if the variable is not significant or important. Here we find our p-values for *prelet* and *viewcat* are both close to zero. Thus, both variables are significant in the prediction of *postlet*. On the contrary, *age* and *sex* and other sex ineteraction terms show high p-values. Thus, these five variables might not be significant in *postlet* scores.
+The table shows in total seven variables which include three interaction terms. The indicator we evaluate significance is the p-value. P-value means the probability we receive a result at least as extreme as we did if the variable is not significant or important. Here we find our p-values for *prelet* and *viewcat* are both close to zero. Thus, both variables are significant in the prediction of *postlet*. On the contrary, *age* and *sex* and other sex interaction terms show high p-values. Thus, these five variables might not be significant in *postlet* scores. 
 
 The result of the multiple linear regression model is:
 \[
@@ -265,13 +268,15 @@ postlet = -7.09+ 0.7 prelet + 5.03 viewcat + 0.34 sex + 0.18 age
  + 0.039 prelet*sex + 0.029 viewcat*sex + 0.001 sex*age 
 \]
 
-The R-squared value for our model above is 48%, which means the prediction values of our model explain 48% of the true values. It doesn't show a valid enough model to predict the postscores on Letters. However, considering our research question that whether Sesame Street is effective in knowledge of letters, the answer from our result assumes positive. 
 
-Moreover, the coefficient of *viewcat* is 5.03, which means while other variables remain unchanged, one higher level of frequency in watching Sesame Street, around five points improvement will show on *postlet* scores. It is quite a huge change.
+Moreover, the coefficient of *viewcat* is 5.03 for males and 5.06 for females, which means while other variables remain unchanged, one higher level of frequency in watching Sesame Street, would lead to an expected improvement of around five points on *postlet* scores. Thus, our analysis does suggest that watching Sesame Street has a positive effect on children's knowledge of letters.
+
+Keep in mind, however, that the R-squared value for our model above is 48%, which means our model only explains 48% of the variation between children's *postlet* scores. While this does not affect the answer to our research question, it does serve as a reminder that there are a number of other factors involved and that we are only explaining part of the variation observed.
+
 
 ## Research Question 2 on Numbers
 
-Next, consider the *postnumb* as response variable. The summary of this MLR model is shown.
+Next, consider the *postnumb* as response variable in a similar structure to our previous analysis. The summary of this MLR model is shown.
 
 ```{r fig.cap="The summary of this MLR model related to postnumb"}
 
@@ -283,7 +288,7 @@ out<-broom::tidy(mod2)
 knitr::kable(out)
 ```
 
-Here we find our p-values for *prenumb* , *viewcat* , and *prenumb x sex* are smaller below the significan level 0.1. Thus, these three variables are significant in the prediction of *postnumb*. On the contrary, *age* and *sex* and other two sex interaction terms show high p-values. Thus, they might not be significant in *postnumb* scores. The significance of *prenumb x sex* represents that the effects of *prenumb* in *postnumb* may depend on the gender. Since female is coded as 1, while male 0, here we may assume that female tends to have higher scores on pretest of numbers.
+Here we find our p-values for *prenumb* , *viewcat* , and *prenumb x sex* are smaller, below the significance level 0.1, meaning that we would have less than a 10% chance of seeing observations at least as extreme as we did if these factors did not influence the *postnumb* score. Thus, these three variables are significant in the prediction of *postnumb*. On the contrary, *age* and *sex* and other two sex interaction terms show high p-values. Thus, they might not be significant in *postnumb* scores. The significance of *prenumb x sex* represents that the effects of *prenumb* in *postnumb* may depend on the gender. Since female is coded as 1, while male 0, here we may assume that females tend to have higher influence of the pretest scores on the post test scores for numbers.
 
 The multiple linear regression model is:
 
@@ -294,13 +299,10 @@ postnumb = -2.16+ 0.57 prenumb + 3.24 viewcat + 2.90 sex
   \[+ 0.22 prenumb*sex - 0.046 viewcat*sex – 0.13 sex*age
 \]
 
-The R-squared value for our model above is 54%, which means the prediction values of our model explain 54% of the true values. It is a better model compared to the model of Letters. We also find one more significant term in Numbers scores. 
 
-Considering our research question that whether Sesame Street is effective in knowledge of numbers, the answer from our result assumes positive. 
+We see that in this model, the coefficient of *viewcat* is 3.24 for males and 3.19 for females, which means while other variables remain unchanged, one higher level of frequency in watching Sesame Street, leads to an expected improvement of around three points on *postnumb* scores. Since this term is considered significant by our model, this provides evidence that Sesame Street is effective in increasing children's knowledge of numbers.
 
-Moreover, the coefficient of *viewcat* is 3.24, which means while other variables remain unchanged, one higher level of frequency in watching Sesame Street, around three points improvement will show on *postnumb* scores. It is a smaller change compared to model of Letters. Thus, we might assume that Sesame Street has a better effect on Letters skills.
-
-
+Like with the letters, we note that the percent of variation that our model explains is 54%, which is slightly higher than that for letters, though not by much, meaning we can understand the significance of this value similar to how we did for the letters. 
 
 
 # Recommendations 
@@ -309,13 +311,13 @@ Moreover, the coefficient of *viewcat* is 3.24, which means while other variable
 
 Our analysis has provided evidence that Sesame Street is effective in improving the knowledge of letters of children as improving the knowledge of letters is highly related to the viewing level. If a child watched Sesame Street more frequently, then he or she can get a higher improvement in the knowledge of letters. 
 
-We will recommend to do a further prediction model since the model we built is around 48% R-squared. We look forward to using other models to explore the relationship of postlet scores and other factors.
+We overall recommend that Sesame Street remain on its current course, particularly in its education of numbers, as our analysis suggests that the show is attaining its goal of educating children, particularly in letters. That being said, further analysis is recommended to fully understand the factors impacting differences in testing scores as our model only accounts for 48% of the observed variation.
 
 **Question 2:**  The second research question is about Sesame Street effective in improving the knowledge of numbers for 3-5 year old children?
 
-The Sesame Street is effective in improving the knowledge of numbers of children. And improving the knowledge of numbers is related to the viewing level and the children’s knowledge of numbers before watching the show. If a child had a good knowledge of numbers and watched Sesame Street more frequently, then he or she can get a higher improvement in the knowledge of numbers, but relatively not as effective as on letters skills.
+Our analysis suggests that Sesame Street is effective in improving the knowledge of numbers of children as the amount of time the children spent watching the show is positively related their post test scores for numbers. 
 
-We recommend to do further analysis on gender's effect on number skills. From previous results, we found out that female seems to have a higher prenumb scores. We look forward to exploring more to understand the relationship between gender and number skills. Moreover, we can also explore a better model for prediction, while the R-squared value is 54%.
+Similarly to with letters, we recommend that Sesame Street remain on its current course, particularly in regards to its teaching of numbers, as our analysis suggests that the show is attaining its goal of educating children in numbers. That being said, further analysis is recommended to fully understand the factors impacting differences in testing scores as our model only accounts for 54% of the observed variation in post test scores.
 
 
 # Limitations
