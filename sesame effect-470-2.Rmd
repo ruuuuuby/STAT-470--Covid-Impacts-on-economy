@@ -367,7 +367,7 @@ plot(sesame$postnumb~sesame$prenumb,xlab='Prescores on Numbers',ylab='Postscores
 
 Assumption checks for model1 with using postlet as response variable, prelet, viewcat, sex, age, the interaction term of sex and other variables as explanatory variables. 
 
-we can observe from residuals vs fitted plot that the residuals are like white noise pattern. From normal Q-Q plot we can conclude that the residuals are normally distributed pattern. Thus, the multiple linear regression model of postlet does not violate assumptions for inference.
+We can observe from residuals vs fitted plot that the residuals are like white noise pattern. From normal Q-Q plot we can conclude that the residuals are normally distributed pattern. Thus, the multiple linear regression model of postlet does not violate assumptions for inference.
 
 ```{r fig.cap = "These plots show the assumptions tests for the letters model. We see that the normality assumption is fairly well met as the points on the normality plot are mostly within the error bands. The homoscedasticity assumption is fairly well met as the errors are mostly distributed randomly around 0. The final two plots show that there are no noticable patterns in the response or residuals by index, implying that the independence and linearity assumptions respectively are relatively well met."}
 par(mfrow=c(2,2))
@@ -401,6 +401,7 @@ plot(mod2$residuals)
 plot(sesame$postlet)
 ```
 
+\newpage
 
 ## Appendix 3: Additional Plots
 
