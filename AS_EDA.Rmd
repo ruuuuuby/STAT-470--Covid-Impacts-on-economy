@@ -1,0 +1,119 @@
+---
+title: "EDA_Case_Study2"
+author: "Leah Hunt"
+date: "10/8/2020"
+output: pdf_document
+---
+
+```{r}
+library(ggplot2)
+```
+
+
+```{r}
+data <- read.table("tidyAS.txt")
+head(data)
+```
+
+Think through the five steps in designing an experiment and reflect on how they apply to the Ankylosing Spondylitis study:
+* What is/are the research hypothesis/es?
+null: stretching does nothing
+alternative: stretching improves "condition"
+~split "condition into flexion and rotation
+
+* What are the key outcome, explanatory, and nuisance variables?  Can you name 2 reasonable outcome variables?
+~Outcome: flexion and rotation
+~explanatory: treatment
+~nuisance: before, left/right hip
+
+*What factors might have led to the particular choices of how many subjects to use?
+~Likely chosen by people that had condition and that were available for study 
+
+*What do you know about how subjects were assigned to conditions?
+~All we know is that there are twice as many stretching as control; implied random assignment but no description given
+
+*What are the analyses that will address the hypotheses? In particular, what sources of variation will you include in your model and should they be fixed or random?
+~ANOVA, mixed effects
+
+*What types of graphical displays might be helpful at both the exploratory data analysis and the final analysis phases?
+~ Numerical summaries comparing left and right hip
+  ~ General numerical summaries too (maybe something with improvement)
+~ points with left and right and before and after for flexion and rotation (put line between control and treatment)
+
+```{r}
+colors <- c("Left Hip" = "blue", "Right Hip" = "red")
+
+plot<-ggplot2::ggplot(aes(x = patientNo), data= data) +
+  geom_point(aes(x = patientNo + .1, y = flexionBefore), color = "red", data = data[data$hip == "Right",]) + 
+        geom_point(aes(x = patientNo + .1, y = flexionAfter), color = "red", data = data[data$hip == "Right",]) +
+        geom_point(aes(x = patientNo - .1, y = flexionBefore), color = "blue", data = data[data$hip == "Left",]) + 
+        geom_point(aes(x = patientNo - .1, y = flexionAfter), color = "blue", data = data[data$hip == "Left",]) +
+  geom_segment(aes(x = patientNo + .1, xend = patientNo + .1, y = flexionBefore, yend = flexionAfter, color = "Right Hip"), data = data[data$hip == "Right",], arrow = arrow(length = unit(0.1, "inches")))+
+   geom_segment(aes(x = patientNo - .1, xend = patientNo - .1, y = flexionBefore, yend = flexionAfter, color = "Left Hip"), data = data[data$hip == "Left",], arrow = arrow(length = unit(0.1, "inches")))+
+        geom_vline(xintercept = 12.5) +
+  labs(x = "Patient",
+         y = 'Flexion Score',
+         color = "Legend") +
+        ggtitle("Flexion Changes for Left and Right Hips")+
+  
+    scale_color_manual(values = colors) +
+        theme(axis.text = element_text(size=10),
+              plot.title = element_text(size=10, face="bold",hjust=0.5),
+              axis.title = element_text(size=10),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+
+```
+Yes, I know I said no arrows, but then I realized jitter made it work better and this is actually a much more readable visualization. 
+
+
+```{r}
+colors <- c("Left Hip" = "blue", "Right Hip" = "red")
+
+plot<-ggplot2::ggplot(aes(x = patientNo), data= data) +
+  geom_point(aes(x = patientNo + .1, y = rotationBefore), color = "red", data = data[data$hip == "Right",]) + 
+        geom_point(aes(x = patientNo + .1, y = rotationAfter), color = "red", data = data[data$hip == "Right",]) +
+        geom_point(aes(x = patientNo - .1, y = rotationBefore), color = "blue", data = data[data$hip == "Left",]) + 
+        geom_point(aes(x = patientNo - .1, y = rotationAfter), color = "blue", data = data[data$hip == "Left",]) +
+  geom_segment(aes(x = patientNo + .1, xend = patientNo + .1, y = rotationBefore, yend = rotationAfter, color = "Right Hip"), data = data[data$hip == "Right",], arrow = arrow(length = unit(0.1, "inches")))+
+   geom_segment(aes(x = patientNo - .1, xend = patientNo - .1, y = rotationBefore, yend = rotationAfter, color = "Left Hip"), data = data[data$hip == "Left",], arrow = arrow(length = unit(0.1, "inches")))+
+        geom_vline(xintercept = 12.5) +
+  labs(x = "Patient",
+         y = 'Rotation Score',
+         color = "Legend") +
+        ggtitle("Rotation Changes for Left and Right Hips")+
+  
+    scale_color_manual(values = colors) +
+        theme(axis.text = element_text(size=10),
+              plot.title = element_text(size=10, face="bold",hjust=0.5),
+              axis.title = element_text(size=10),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=14),
+              legend.title = element_text(size=16)
+        )
+
+plot
+
+```
+Notes:
+*Looks like rotation has more distinct difference in amount of change between treatment and non-treatment
+*Left hips may be slightly more prone to decrease? Especially in control?
+
+
+Below are some things that aren't necessarily necessary to show/present but just exploring how related flexion and rotation are related
+```{r}
+cor(data$flexionAfter, data$rotationAfter)
+cor(data$flexionBefore, data$rotationBefore)
+cor(data$flexionAfter-data$flexionBefore, data$rotationAfter-data$rotationBefore)
+```
+```{r}
+plot(data$flexionAfter, data$rotationAfter)
+plot(data$flexionBefore, data$rotationBefore)
+plot(data$flexionAfter-data$flexionBefore, data$rotationAfter-data$rotationBefore)
+```
+
+
