@@ -7,11 +7,13 @@ output: pdf_document
 
 ```{r}
 library(ggplot2)
+library(tidyr)
 ```
 
 
 ```{r}
-data <- read.table("tidyAS.txt")
+data <- read.csv("Ankylosing_Spondilitus_data_clean.csv")
+colnames(data)[1] <- "patientNo"
 head(data)
 ```
 
@@ -44,12 +46,12 @@ alternative: stretching improves "condition"
 colors <- c("Left Hip" = "blue", "Right Hip" = "red")
 
 plot<-ggplot2::ggplot(aes(x = patientNo), data= data) +
-  geom_point(aes(x = patientNo + .1, y = flexionBefore), color = "red", data = data[data$hip == "Right",]) + 
-        geom_point(aes(x = patientNo + .1, y = flexionAfter), color = "red", data = data[data$hip == "Right",]) +
-        geom_point(aes(x = patientNo - .1, y = flexionBefore), color = "blue", data = data[data$hip == "Left",]) + 
-        geom_point(aes(x = patientNo - .1, y = flexionAfter), color = "blue", data = data[data$hip == "Left",]) +
-  geom_segment(aes(x = patientNo + .1, xend = patientNo + .1, y = flexionBefore, yend = flexionAfter, color = "Right Hip"), data = data[data$hip == "Right",], arrow = arrow(length = unit(0.1, "inches")))+
-   geom_segment(aes(x = patientNo - .1, xend = patientNo - .1, y = flexionBefore, yend = flexionAfter, color = "Left Hip"), data = data[data$hip == "Left",], arrow = arrow(length = unit(0.1, "inches")))+
+  geom_point(aes(x = patientNo + .1, y = flexionBefore), color = "red", data = data[data$hipRL == "right",]) + 
+        geom_point(aes(x = patientNo + .1, y = flexionAfter), color = "red", data = data[data$hipRL == "right",]) +
+        geom_point(aes(x = patientNo - .1, y = flexionBefore), color = "blue", data = data[data$hipRL == "left",]) + 
+        geom_point(aes(x = patientNo - .1, y = flexionAfter), color = "blue", data = data[data$hipRL == "left",]) +
+  geom_segment(aes(x = patientNo + .1, xend = patientNo + .1, y = flexionBefore, yend = flexionAfter, color = "Right Hip"), data = data[data$hipRL == "right",], arrow = arrow(length = unit(0.1, "inches")))+
+   geom_segment(aes(x = patientNo - .1, xend = patientNo - .1, y = flexionBefore, yend = flexionAfter, color = "Left Hip"), data = data[data$hipRL == "left",], arrow = arrow(length = unit(0.1, "inches")))+
         geom_vline(xintercept = 12.5) +
   labs(x = "Patient",
          y = 'Flexion Score',
@@ -61,8 +63,8 @@ plot<-ggplot2::ggplot(aes(x = patientNo), data= data) +
               plot.title = element_text(size=10, face="bold",hjust=0.5),
               axis.title = element_text(size=10),
               panel.background = element_rect(fill = "white", color="black"),
-              legend.text = element_text(size=14),
-              legend.title = element_text(size=16)
+              legend.text = element_text(size=10),
+              legend.title = element_text(size=10)
         )
 
 plot
@@ -75,12 +77,12 @@ Yes, I know I said no arrows, but then I realized jitter made it work better and
 colors <- c("Left Hip" = "blue", "Right Hip" = "red")
 
 plot<-ggplot2::ggplot(aes(x = patientNo), data= data) +
-  geom_point(aes(x = patientNo + .1, y = rotationBefore), color = "red", data = data[data$hip == "Right",]) + 
-        geom_point(aes(x = patientNo + .1, y = rotationAfter), color = "red", data = data[data$hip == "Right",]) +
-        geom_point(aes(x = patientNo - .1, y = rotationBefore), color = "blue", data = data[data$hip == "Left",]) + 
-        geom_point(aes(x = patientNo - .1, y = rotationAfter), color = "blue", data = data[data$hip == "Left",]) +
-  geom_segment(aes(x = patientNo + .1, xend = patientNo + .1, y = rotationBefore, yend = rotationAfter, color = "Right Hip"), data = data[data$hip == "Right",], arrow = arrow(length = unit(0.1, "inches")))+
-   geom_segment(aes(x = patientNo - .1, xend = patientNo - .1, y = rotationBefore, yend = rotationAfter, color = "Left Hip"), data = data[data$hip == "Left",], arrow = arrow(length = unit(0.1, "inches")))+
+  geom_point(aes(x = patientNo + .1, y = rotationBefore), color = "red", data = data[data$hipRL == "right",]) + 
+        geom_point(aes(x = patientNo + .1, y = rotationAfter), color = "red", data = data[data$hipRL == "right",]) +
+        geom_point(aes(x = patientNo - .1, y = rotationBefore), color = "blue", data = data[data$hipRL == "left",]) + 
+        geom_point(aes(x = patientNo - .1, y = rotationAfter), color = "blue", data = data[data$hipRL == "left",]) +
+  geom_segment(aes(x = patientNo + .1, xend = patientNo + .1, y = rotationBefore, yend = rotationAfter, color = "Right Hip"), data = data[data$hipRL == "right",], arrow = arrow(length = unit(0.1, "inches")))+
+   geom_segment(aes(x = patientNo - .1, xend = patientNo - .1, y = rotationBefore, yend = rotationAfter, color = "Left Hip"), data = data[data$hipRL == "left",], arrow = arrow(length = unit(0.1, "inches")))+
         geom_vline(xintercept = 12.5) +
   labs(x = "Patient",
          y = 'Rotation Score',
@@ -92,8 +94,8 @@ plot<-ggplot2::ggplot(aes(x = patientNo), data= data) +
               plot.title = element_text(size=10, face="bold",hjust=0.5),
               axis.title = element_text(size=10),
               panel.background = element_rect(fill = "white", color="black"),
-              legend.text = element_text(size=14),
-              legend.title = element_text(size=16)
+              legend.text = element_text(size=10),
+              legend.title = element_text(size=10)
         )
 
 plot
@@ -102,6 +104,328 @@ plot
 Notes:
 *Looks like rotation has more distinct difference in amount of change between treatment and non-treatment
 *Left hips may be slightly more prone to decrease? Especially in control?
+
+
+```{r}
+data2 <- data
+data2$deltaRotation <- data2$rotationAfter - data2$rotationBefore
+data2$deltaFlexion <- data2$flexionAfter - data2$flexionBefore
+dt<-tidyr::pivot_longer(data2, 9:10, names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df1 <- data.frame(
+  Treatment = c("Combined", "Combined"),
+  Hip = c("Combined", "Combined"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+#df <- df[c(1,5:17, 20),]
+#df$SAV=kableExtra::cell_spec(df$SAV, background  = ifelse(df$SAV > 70, "yellow", "white"))
+
+knitr::kable(df, escape=F,
+             caption = "Statistics by Variable",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+
+```{r}
+dt<-tidyr::pivot_longer(data2[data2$hipRL == "left",], c(9:10), names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df2 <- data.frame(
+  Treatment = c("Combined", "Combined"),
+  Hip = c("Left", "Left"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+#df <- df[c(1,5:17, 20),]
+#df$SAV=kableExtra::cell_spec(df$SAV, background  = ifelse(df$SAV > 70, "yellow", "white"))
+
+knitr::kable(df, escape=F,
+             caption = "Statistics by Variable for left hip",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+
+
+```{r}
+dt<-tidyr::pivot_longer(data2[data2$hipRL == "right",], c(9:10), names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df3 <- data.frame(
+  Treatment = c("Combined", "Combined"),
+  Hip = c("Right", "Right"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+
+
+# knitr::kable(df, escape=F,
+#              caption = "Statistics by Variable for right hip",
+#              align = c('c', rep('r', 9))) %>%
+# kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+#                           font_size = 9, latex_options = "HOLD_position") 
+```
+
+```{r}
+data3 <- data2[data2$hipRL == "right",]
+data3 <- data3[data2$treatment == "control",]
+dt<-tidyr::pivot_longer(data3, c(9:10), names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df4 <- data.frame(
+  Treatment = c("Control", "Control"),
+  Hip = c("Right", "Right"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+
+
+knitr::kable(df, escape=F,
+             caption = "Statistics by Variable for right hip",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+
+```{r}
+data3 <- data2[data2$hipRL == "right",]
+data3 <- data3[data2$treatment == "treatment",]
+
+dt<-tidyr::pivot_longer(data3, c(9:10), names_to="Stat")
+
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df5 <- data.frame(
+  Treatment = c("Treatment", "Treatment"),
+  Hip = c("Right", "Right"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+
+
+knitr::kable(df, escape=F,
+             caption = "Statistics by Variable for right hip",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+
+```{r}
+data3 <- data2[data2$hipRL == "left",]
+data3 <- data3[data2$treatment == "control",]
+dt<-tidyr::pivot_longer(data3, c(9:10), names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df6 <- data.frame(
+  Treatment = c("Control", "Control"),
+  Hip = c("Left", "Left"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+
+
+knitr::kable(df, escape=F,
+             caption = "Statistics by Variable for right hip",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+
+```{r}
+data3 <- data2[data2$hipRL == "left",]
+data3 <- data3[data2$treatment == "treatment",]
+
+dt<-tidyr::pivot_longer(data3, c(9:10), names_to="Stat")
+
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df7 <- data.frame(
+  Treatment = c("Treatment", "Treatment"),
+  Hip = c("Left", "Left"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+
+
+knitr::kable(df, escape=F,
+             caption = "Statistics by Variable for right hip",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+
+```{r}
+```{r}
+dt<-tidyr::pivot_longer(data2[data2$hipRL == "right",], c(9:10), names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df3 <- data.frame(
+  Treatment = c("Combined", "Combined"),
+  Hip = c("Right", "Right"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+
+
+# knitr::kable(df, escape=F,
+#              caption = "Statistics by Variable for right hip",
+#              align = c('c', rep('r', 9))) %>%
+# kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+#                           font_size = 9, latex_options = "HOLD_position") 
+```
+
+```{r}
+data3 <- data2[data2$hipRL == "right",]
+data3 <- data3[data2$treatment == "control",]
+dt<-tidyr::pivot_longer(data3, c(9:10), names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df4 <- data.frame(
+  Treatment = c("Control", "Control"),
+  Hip = c("Right", "Right"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+
+
+knitr::kable(df, escape=F,
+             caption = "Statistics by Variable for right hip",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+
+
+```{r}
+dt<-tidyr::pivot_longer(data2[data2$treatment == "control",], c(9:10), names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df8 <- data.frame(
+  Treatment = c("Control", "Control"),
+  Hip = c("Combined", "Combined"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+
+
+# knitr::kable(df, escape=F,
+#              caption = "Statistics by Variable for right hip",
+#              align = c('c', rep('r', 9))) %>%
+# kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+#                           font_size = 9, latex_options = "HOLD_position") 
+```
+
+```{r}
+
+dt<-tidyr::pivot_longer(data2[data2$treatment == "treatment",], c(9:10), names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df9 <- data.frame(
+  Treatment = c("Treatment", "Treatment"),
+  Hip = c("Combined", "Combined"),
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3), 
+  `Sample Skewness` = stats$skew)
+
+
+knitr::kable(df, escape=F,
+             caption = "Statistics by Variable for right hip",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+
+
+
+```{r}
+df <- rbind(df1, df2, df3, df8, df9, df4, df5, df6, df7)
+knitr::kable(df, escape=F,
+             caption = "Statistics by Variable",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+ Note: There is too much going on here, and it may be a good idea to either split these up or put them in a better order at some point
 
 
 Below are some things that aren't necessarily necessary to show/present but just exploring how related flexion and rotation are related
