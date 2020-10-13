@@ -440,4 +440,52 @@ plot(data$flexionBefore, data$rotationBefore)
 plot(data$flexionAfter-data$flexionBefore, data$rotationAfter-data$rotationBefore)
 ```
 
+##Added
 
+calculate the difference on flexion and rotation before/after.
+
+
+
+```{r}
+data$flexiondiff=data$flexionAfter-data$flexionBefore
+data$rotationdiff=data$rotationAfter-data$rotationBefore
+plot(data$flexiondiff,type="l",col="red",xlab="observations including both hips", ylab="differences", main="before/after difference of flexion and rotation")
+lines(data$rotationdiff,type="l",col="green")
+abline(h=0)
+legend("topleft",legend=c("flexion difference", "rotation difference"),
+       col=c("red", "green"), lty=1:1)
+
+# control group and different hips
+# want to know if there is difference between right and left hips
+
+par(mfrow=c(1,2))
+plot(data[data$hipRL=="left"&data$treatment=='control',]$flexiondiff,type="o",xlab="12 Obs in Control", ylab="flexion difference",col="red",main="flexion difference",ylim=c(-15,55))
+abline(h=0)
+lines(data[data$hipRL=="right"&data$treatment=='control',]$flexiondiff,type="o",col="green")
+legend("topleft",legend=c("left hip", "right hip"),
+       col=c("red", "green"), lty=1:1)
+
+
+plot(data[data$hipRL=="left"&data$treatment=='treatment',]$flexiondiff,type="o",xlab="27 Obs in Treatment", ylab="flexion difference",col="red",main="flexion difference",ylim=c(-15,55))
+abline(h=0)
+lines(data[data$hipRL=="right"&data$treatment=='treatment',]$flexiondiff,type="o",col="green")
+legend("topleft",legend=c("left hip", "right hip"),
+       col=c("red", "green"), lty=1:1)
+
+
+par(mfrow=c(1,2))
+plot(data[data$hipRL=="left"&data$treatment=='control',]$rotationdiff,type="o",xlab="12 Obs in Control", ylab="rotation difference",col="red",main="rotation difference",ylim=c(-10,22))
+abline(h=0)
+lines(data[data$hipRL=="right"&data$treatment=='control',]$rotationdiff,type="o",col="green")
+legend("topright",legend=c("left hip", "right hip"),
+       col=c("red", "green"), lty=1:1)
+
+
+plot(data[data$hipRL=="left"&data$treatment=='treatment',]$rotationdiff,type="o",xlab="27 Obs in Treatment", ylab="rotation difference",col="red",main="rotation difference",ylim=c(-10,22))
+abline(h=0)
+lines(data[data$hipRL=="right"&data$treatment=='treatment',]$rotationdiff,type="o",col="green")
+legend("bottomleft",legend=c("left hip", "right hip"),
+       col=c("red", "green"), lty=1:1)
+
+
+```
