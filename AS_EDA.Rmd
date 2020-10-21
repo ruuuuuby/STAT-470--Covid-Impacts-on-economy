@@ -126,14 +126,7 @@ df1 <- data.frame(
   SAM = stats$mean, 
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
-#df <- df[c(1,5:17, 20),]
-#df$SAV=kableExtra::cell_spec(df$SAV, background  = ifelse(df$SAV > 70, "yellow", "white"))
 
-knitr::kable(df, escape=F,
-             caption = "Statistics by Variable",
-             align = c('c', rep('r', 9))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position") 
 ```
 
 ```{r}
@@ -153,14 +146,7 @@ df2 <- data.frame(
   SAM = stats$mean, 
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
-#df <- df[c(1,5:17, 20),]
-#df$SAV=kableExtra::cell_spec(df$SAV, background  = ifelse(df$SAV > 70, "yellow", "white"))
 
-knitr::kable(df, escape=F,
-             caption = "Statistics by Variable for left hip",
-             align = c('c', rep('r', 9))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position") 
 ```
 
 
@@ -182,12 +168,6 @@ df3 <- data.frame(
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
 
-
-# knitr::kable(df, escape=F,
-#              caption = "Statistics by Variable for right hip",
-#              align = c('c', rep('r', 9))) %>%
-# kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-#                           font_size = 9, latex_options = "HOLD_position") 
 ```
 
 ```{r}
@@ -210,12 +190,6 @@ df4 <- data.frame(
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
 
-
-knitr::kable(df, escape=F,
-             caption = "Statistics by Variable for right hip",
-             align = c('c', rep('r', 9))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position") 
 ```
 
 ```{r}
@@ -240,12 +214,6 @@ df5 <- data.frame(
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
 
-
-knitr::kable(df, escape=F,
-             caption = "Statistics by Variable for right hip",
-             align = c('c', rep('r', 9))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position") 
 ```
 
 ```{r}
@@ -268,12 +236,6 @@ df6 <- data.frame(
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
 
-
-knitr::kable(df, escape=F,
-             caption = "Statistics by Variable for right hip",
-             align = c('c', rep('r', 9))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position") 
 ```
 
 ```{r}
@@ -298,12 +260,6 @@ df7 <- data.frame(
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
 
-
-knitr::kable(df, escape=F,
-             caption = "Statistics by Variable for right hip",
-             align = c('c', rep('r', 9))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position") 
 ```
 
 ```{r}
@@ -325,12 +281,6 @@ df3 <- data.frame(
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
 
-
-# knitr::kable(df, escape=F,
-#              caption = "Statistics by Variable for right hip",
-#              align = c('c', rep('r', 9))) %>%
-# kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-#                           font_size = 9, latex_options = "HOLD_position") 
 ```
 
 ```{r}
@@ -353,12 +303,6 @@ df4 <- data.frame(
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
 
-
-knitr::kable(df, escape=F,
-             caption = "Statistics by Variable for right hip",
-             align = c('c', rep('r', 9))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position") 
 ```
 
 
@@ -380,12 +324,6 @@ df8 <- data.frame(
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
 
-
-# knitr::kable(df, escape=F,
-#              caption = "Statistics by Variable for right hip",
-#              align = c('c', rep('r', 9))) %>%
-# kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-#                           font_size = 9, latex_options = "HOLD_position") 
 ```
 
 ```{r}
@@ -407,12 +345,6 @@ df9 <- data.frame(
   SAV = round((stats$sd)^2,3), 
   `Sample Skewness` = stats$skew)
 
-
-knitr::kable(df, escape=F,
-             caption = "Statistics by Variable for right hip",
-             align = c('c', rep('r', 9))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position") 
 ```
 
 
