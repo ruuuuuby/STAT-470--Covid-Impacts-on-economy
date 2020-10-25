@@ -22,6 +22,11 @@ library(kableExtra)
 library(magrittr)
 library(lme4)
 library(lmerTest)
+
+# Data
+
+data <- read.csv("Ankylosing_Spondilitus_data_clean.csv")
+colnames(data)[1] <- "patientNo"
 ```
 
 
@@ -74,7 +79,7 @@ control_group <- control_group %>%
   na.omit() %>%
   setNames(., c("flexionBefore","flexionAfter","rotationBefore","rotationAfter")) %>%
   mutate(hip = rep(c('Right','Left'),12),
-         treatment = 'control',
+         treatment = 'Control',
          patientNo = rep(1:12,each=2))
 
 stretched_group <- read.table("Ankylosing_Spondilitus_data.txt", 
@@ -233,14 +238,14 @@ clean_data %>%
 
 # Statistical Analysis 
 
-As described in previous sections, this dataset actually contains three different levels of observations. Level 1 is the record of each hip. Level 2 consists of different patients and level 3 containts our two treatment groups. In order to take into consideration the variation among patients and treatment groups, we will use a three-level model to represent our problem.
+As described in previous sections, this dataset actually contains three different levels of observations. Level 1 is the record of each hip. Level 2 consists of different patients, and level 3 contains our two treatment groups. In order to take into consideration the variation among patients and treatment groups, we will use a three-level model to represent our problem.
 
 Then we also need to choose which effects we should include in our model for different sources of variability. Since the treatment group is our research goal, we will associate fixed effects to the treatment. And because our patients are randomly chosen, we assume the patients are from certain probability distribution and associate random effects with them.
 
 
 ## Model Structure
 
-We we use a three-level model. The model can be expressed as
+We use a three-level model. The model can be expressed as
 
 - Level One (hip records for each patient):
 $$
@@ -256,7 +261,7 @@ $$
 a_{i} = \alpha_{0} + \alpha_1 \text{Stretch}_i
 $$
 
-- $Y_{ijk}$ is the increase of flexion (or ratation) of hip $k$ (Left or Right) of patient $j$ from group $i$(Control or Stretch). 
+- $Y_{ijk}$ is the increase of flexion (or rotation) of hip $k$ (Left or Right) of patient $j$ from group $i$(Control or Stretch). 
 - $a_{ij}$ is the true mean increase for patient $j$ from group $i$.
 - $a_i$ is the true mean increase for group $i$.
 - $\alpha_0$ is the mean increase for control group and $\alpha_1$ is the mean increase for stretch group relative to the control group.
@@ -268,19 +273,98 @@ $$
 
 ## Model results
 
-We fitted the model for the increase of both measurement. The fitted results of this model is shown below:
+In order to model the effects of stretching on the flexion and rotation scores, we fit a linear mixed effects model, meaning a model that considers variables that are both fixed effects, which are effects for which we only care about the levels included in the model, and random effects, which are effects for which the levels shown in the data are not the only levels that we consider. We will use the score at the end of the period as our response variable.
+
+The treatment, i.e. stretch or no stretch, clearly will function as a fixed effect with the control group as the baseline, meaning that our resulting coefficients will consider the treatment group relative to the control group. We saw in our exploratory data analysis that there does appear to be some difference between the effects on the right or left hip, so we will also include the hip as a fixed effect, which will consider the left hip as a baseline. 
+
+For our random effects, we will want to consider the variation between patients, since the scores of the right and left hip for a particular patient are likely to be related to one another, which is supported by the exploratory plots. We will also want to include the starting level of flexion or rotation for each model as a random effect as it is reasonable that the starting score would have an impact on the ending score. We also suspect that the starting score could impact how much improvement a person could reasonably expect to see, which is our primary reason to consider a model including both the before and after scores as opposed to predicting the change between the two.
+
+While we did consider interaction terms between these effects, we determined these interaction terms to be insignificant and therefore excluded them from the models. The results of these models are shown in Tables 3-6. 
+
 
 ```{r Model1-flexion} 
-model1.flexion <- lmer(flexionIncrease ~ treatment + (1 | patientNo), data = clean_data)
-summary(model1.flexion)
-```
+model1Flexion <- lmer(flexionAfter ~ (1 | flexionBefore) + treatment + 
+                        hip + (1 | patientNo), data = clean_data)
+mod <- summary(model1Flexion)$coefficients
 
+rownames(mod) <- c("(Intercept)", "Treatment", "Right Hip")
+knitr::kable(mod, escape=F,
+             align = c('c', rep('r', 9)),
+             caption = "Effects on Flexion Improvement") %>%
+  kableExtra::kable_styling(latex_options = "HOLD_position") 
+
+m <- summary(model1Flexion)
+n <- m$varcor
+
+df <- data.frame(Group = c("Patient", "Flexion Before", "Residual"), 
+                 Variance = c(25.999, 63.097, 8.875))
+#n$Std.Dev. <- as.numeric(n$Std.Dev.)^2
+knitr::kable(df, escape=F,
+             align = c('c', rep('r', 9)), caption = "Variance for Random Effects of Flexion") %>%
+  kableExtra::kable_styling(latex_options = "HOLD_position") 
+```
+ 
+ Considering the model for flexion, the results of which are shown in Tables 3 and 4, we see that after controlling for the variance between patients, the prior flexion score, and any differences between the left and right hip, there is a significant, defined as having a p-value of less than .05, which means that there is less than a .05 chance that results at least as extreme as were seen would occur if the variable was not significant, improvement from stretching, with the expected improvement, all other things constant, being about 7.8.
+ 
+ 
 ```{r Model1-rotation} 
-model1.rotation <- lmer(rotationIncrease ~ treatment + (1 | patientNo), data = clean_data)
-summary(model1.rotation)
+model1Rotation <- lmer(rotationAfter ~ (1 | rotationBefore) + hip + 
+                         treatment + (1 | patientNo), data = clean_data)
+mod <- summary(model1Rotation)$coefficients
+
+rownames(mod) <- c("(Intercept)", "Treatment", "Right Hip")
+# knitr::kable(mod, escape=F,
+#              align = c('c', rep('r', 9)),
+#              caption = "Effects on Rotation Improvement") %>%
+#   kableExtra::kable_styling(position ="float_left", full_width = F) 
+m <- summary(model1Flexion)
+n <- m$varcor
+
+df <- data.frame(Group = c("Patient", "Rotation Before", "Residual"), Variance = c(23.218, 65.006, 7.807))
+#n$Std.Dev. <- as.numeric(n$Std.Dev.)^2
+#gridExtra::grid.arrange(
+knitr::kable(mod, escape=F,
+             align = c('c', rep('r', 9)),
+             caption = "Effects on Rotation Improvement") %>%
+  kableExtra::kable_styling(latex_options = "HOLD_position")
+
+knitr::kable(df, escape=F,
+             align = c('c', rep('r', 9)), , caption = "Variance for Random Effects of Rotation") %>%
+  kableExtra::kable_styling(latex_options = "HOLD_position") 
+#nrow = 1
+#)
 ```
 
-The results indicate that the stretch treatment has a significant impact on rotation increase. The mean of the roation increase in the stretch group is 5.63 higher than the mean increase in the control group and this difference has p-value 0.005.  However, the impact on the flexion is not significant (p-value 0.2).
+```{r}
+# intervals <-confint(model1Flexion, level = 0.95, oldNames = FALSE)
+# row.names(intervals)[c(4,1,2)] <- c("Intercept", "Patient Number", "Rotation Before")
+# knitr::kable(
+#   intervals[c(4,1,2),],
+#   digits = 3,
+#   caption = "Upper and Lower Confidence Bounds-90% SCI, Bonferroni Adj. DO WE WANT SOMETHING LIKE THIS??",
+#   align = c('l',rep('c',2))
+# ) %>%
+#   kableExtra::kable_styling(
+#     bootstrap_options = c("striped", "condensed"),
+#     font_size = 12, latex_options = "HOLD_position")
+# 
+# intervals <-confint(model1Rotation, level = 0.95, oldNames = FALSE)
+# row.names(intervals)[c(4,1,2)] <- c("Intercept", "Patient Number", "Rotation Before")
+# knitr::kable(
+#   intervals[c(4,1,2),],
+#   digits = 3,
+#   caption = "Upper and Lower Confidence Bounds-90% SCI, Bonferroni Adj. DO WE WANT SOMETHING LIKE THIS??",
+#   align = c('l',rep('c',2))
+# ) %>%
+#   kableExtra::kable_styling(
+#     bootstrap_options = c("striped", "condensed"),
+#     font_size = 12, latex_options = "HOLD_position")
+```
+ 
+ Considering the model for rotation, we see that after controlling for the variance between patients, the prior rotation score, and any differences between the left and right hip, there is a significant, using the same metric as flexion with a p-value <.05, improvement from stretching, with the expected improvement, all other things constant, being about 2.9.
+ 
+Beyond noticing that stretching does appear to lead to a significant increase in both flexion and rotation, there are several other notable components of these results. It is unsurprising to see that both the variance between patients and the variance based on the starting score account for a fair amount of variation, which are significant at the .05 level using a Bonferroni adjustment (not shown in the tables). The effect of the hip, right or left, is interesting in that it only has a significant effect for the rotation score. In fact, the right hip is expected to have an ending rotation score 5.8 better than the left, all other things equal. A possible reason for this result could be that the more people tend to be right leg dominant, so the daily actions of the right hip may have differences that impact the rotation score. Of course, this is purely a guess as to a possible cause that would require further analysis to prove or disprove.
+
 
 ### Model Diagnostics
 
@@ -293,13 +377,13 @@ Generally, multilevel models response is assumed to be linear with respect to th
 ```{r model-test-resid, fig.cap="Residuals plot for models"}
 # Figure 10
 gridExtra::grid.arrange(
-ggplot(fortify.merMod(model1.flexion), aes(x = .fitted, y = .resid)) + 
+ggplot(fortify.merMod(model1Flexion), aes(x = .fitted, y = .resid)) + 
   geom_point() +
   geom_hline(yintercept = 0) +
   ylim(-11,17) +
   ggtitle("residuals of flexion model")
 ,
-ggplot(fortify.merMod(model1.rotation), aes(x = .fitted, y = .resid)) + 
+ggplot(fortify.merMod(model1Rotation), aes(x = .fitted, y = .resid)) + 
   geom_point() +
   geom_hline(yintercept = 0) +
   ylim(-11,17) +
@@ -318,13 +402,13 @@ Our model also assumes that the residuals follow the Normal distribution. We can
 ```{r model-test-qq, fig.cap="Q-Q plot for models"}
 # Figure 11
 gridExtra::grid.arrange(
-ggplot(fortify.merMod(model1.flexion), aes(sample = .resid)) + 
+ggplot(fortify.merMod(model1Flexion), aes(sample = .resid)) + 
   stat_qq() + 
   stat_qq_line() +
   ylim(-10,10) +
   ggtitle("Q-Q plot of flexion model")
 ,
-ggplot(fortify.merMod(model1.rotation), aes(sample = .resid)) + 
+ggplot(fortify.merMod(model1Rotation), aes(sample = .resid)) + 
   stat_qq() + 
   stat_qq_line()+
   ylim(-10,10) +
