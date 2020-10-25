@@ -279,10 +279,16 @@ The treatment, i.e. stretch or no stretch, clearly will function as a fixed effe
 
 For our random effects, we will want to consider the variation between patients, since the scores of the right and left hip for a particular patient are likely to be related to one another, which is supported by the exploratory plots. We will also want to include the starting level of flexion or rotation for each model as a random effect as it is reasonable that the starting score would have an impact on the ending score. We also suspect that the starting score could impact how much improvement a person could reasonably expect to see, which is our primary reason to consider a model including both the before and after scores as opposed to predicting the change between the two.
 
+$$flexionAfter_{ij} = \beta_1*flexionBefore_{ij} + \beta_2*hip + \beta_3*treatment + \beta_{4_i} + \epsilon_{ij}$$
+
+$$\beta_{4_i} = \alpha_i +  \epsilon_i$$
+where hip = 0 if it is a left hip and 1 if it is a right hip. Treatment = 0 if it is the control and 1 if it is the treatment group, i represents the patient number and j represents which hip is being considered
+
 While we did consider interaction terms between these effects, we determined these interaction terms to be insignificant and therefore excluded them from the models. The results of these models are shown in Tables 3-6. 
 
 
 ```{r Model1-flexion} 
+clean_data$patientNo <- as.factor(clean_data$patientNo)
 model1Flexion <- lmer(flexionAfter ~ (1 | flexionBefore) + treatment + 
                         hip + (1 | patientNo), data = clean_data)
 mod <- summary(model1Flexion)$coefficients
@@ -317,7 +323,7 @@ rownames(mod) <- c("(Intercept)", "Treatment", "Right Hip")
 #              align = c('c', rep('r', 9)),
 #              caption = "Effects on Rotation Improvement") %>%
 #   kableExtra::kable_styling(position ="float_left", full_width = F) 
-m <- summary(model1Flexion)
+m <- summary(model1Rotation)
 n <- m$varcor
 
 df <- data.frame(Group = c("Patient", "Rotation Before", "Residual"), Variance = c(23.218, 65.006, 7.807))
@@ -334,6 +340,12 @@ knitr::kable(df, escape=F,
 #nrow = 1
 #)
 ```
+```{r}
+summary(model1Flexion)
+summary(model1Rotation)
+```
+
+
 
 ```{r}
 # intervals <-confint(model1Flexion, level = 0.95, oldNames = FALSE)
