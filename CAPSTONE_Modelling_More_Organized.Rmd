@@ -187,6 +187,8 @@ Dow_{t} = \beta_0 + \beta_1CPI_{t} + \beta_2Gold_{t}+...+\beta_8Netexp_{t} + \th
 \beta_0 \text{might be the intercepts of two models?}
 \]
 
+also might want to consider adding such as Gold_{t-1} and so on in the model if possible 
+
 
 
 ## Questions:
