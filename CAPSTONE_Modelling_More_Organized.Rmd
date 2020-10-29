@@ -145,6 +145,60 @@ coeftest(x = mod1)
 #ts(resid(reg3))
 ```
 
+```{r}
+# Another approach: convert all data into time-series data
+# goal: don't want to directly add time as a predictor in above approach (feel weird)
+# basic idea doesn't change 
+
+# Make time series data and only pick time where all variables have values
+Dow=as.ts(data$DOW_Close[2:475])
+netexp=na.omit(as.ts(data$NETEXP[2:475]))
+unemployment=na.omit(as.ts(data$unemployment[2:475]))
+oil=na.omit(as.ts(data$oil[2:475]))
+gold=na.omit(as.ts(data$gold[2:475]))
+cpi=na.omit(as.ts(data$cpi[2:475]))
+ffr=na.omit(as.ts(data$federal_funds_rate[2:475]))
+gdp=na.omit(as.ts(data$gdp[2:475]))
+cci=na.omit(as.ts(data$consumer_confidence[2:475]))
+
+# Mean strucutre modelling
+
+regmodel=lm(Dow~netexp+unemployment+oil+gold+cpi+ffr+gdp+cci)
+summary(regmodel)
+plot(regmodel,which=1:4)
+acf(residuals(regmodel))
+pacf(residuals(regmodel))
+
+# probably AR(1)
+arimamodel <- arima(residuals(regmodel),order = c(1,0,0))
+arimamodel
+tsdiag(arimamodel)
+acf(resid(arimamodel))
+pacf(resid(arimamodel))
+plot(residuals(arimamodel))
+```
+
+
+## Model structure 
+
+\[
+Dow_{t} = \beta_0 + \beta_1CPI_{t} + \beta_2Gold_{t}+...+\beta_8Netexp_{t} + \theta_0Dow_{t-1} + errors
+\\
+\beta_0 \text{might be the intercepts of two models?}
+\]
+
+
+
+## Questions:
+
+```{r}
+# consider high correlations among predictors
+car::vif(regmodel)
+cor(data[2:475,5:15])
+# different variances among predictors
+var(na.omit(data$oil))
+var(na.omit(data$NETEXP))
+```
 
 
 
