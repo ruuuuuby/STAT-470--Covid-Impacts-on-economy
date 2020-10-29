@@ -198,6 +198,7 @@ also might want to consider adding such as Gold_{t-1} and so on in the model if 
 car::vif(regmodel)
 cor(data[2:475,5:15])
 # different variances among predictors
+# should we normalized data ie (X-X_min)/(X_max-X_min)
 var(na.omit(data$oil))
 var(na.omit(data$NETEXP))
 ```
