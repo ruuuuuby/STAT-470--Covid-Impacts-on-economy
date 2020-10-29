@@ -1,0 +1,305 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+#Capstone Modelling
+
+```{r}
+# Imports
+library(lmtest)
+library(lubridate)
+library(car)
+```
+
+```{r}
+# Read Data
+data=read.table("economicData.txt",header =T)
+data$inflation <- c(NA, (data$cpi[2:length(data$cpi)] - data$cpi[1:length(data$cpi)-1])/data$cpi[1:length(data$cpi)-1])
+data <- na.omit(data)
+```
+
+```{r}
+# Plot log of DOW
+plot(ymd(data$DATE), log(data$DOW_Close),type='o', ylab = "log(DOW)", xlab = "Date")
+```
+## Model 1: Find the outliers
+
+```{r}
+# Linear component
+reg2 <- lm(log(DOW_Close)~
+             poly(time(DATE),degree = 1,raw = T),data=data)
+plot(ymd(data$DATE), reg2$residuals,ylab = "residuals", xlab = "Date")
+
+```
+```{r}
+# Difference between residuals
+res_temp <- reg2$residuals[2:length(reg2$residuals)] - reg2$residuals[1:length(reg2$residuals)-1]
+
+```
+
+```{r}
+# Time Series Model
+acf(res_temp)
+mod1 <- arima(res_temp,order = c(1,0,0))
+```
+
+```{r}
+outliers <- forecast::tsoutliers(mod1$residuals)$index
+data$DATE[outliers]
+data$DATE[which(abs(mod1$residuals)>3*sqrt(var(mod1$residuals)))]
+
+plot(ymd(data$DATE)[2:length(reg2$residuals)], res_temp, ylab = "Change in residual", xlab = "Date")
+abline(h = -3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations below
+abline(h = 3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations above
+outliersmonsig <- which(abs(mod1$residuals) > 3*sqrt(var(mod1$residuals)))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Daily outlier analysis
+
+
+```{r}
+data_daily=read.csv("DOWdaily.csv",header =T)
+
+reg2 <- lm(log(Close)~
+             poly(time(Date),degree = 2,raw = T),data=data_daily)
+```
+
+```{r}
+acf(resid(reg2))
+mod1 <- arima(resid(reg2),order = c(1,0,0))
+
+outliers <- forecast::tsoutliers(mod1$residuals)$index
+outliers
+outliers1 <- outliers + 1
+out <- data_daily[outliers1,]
+noout <- data_daily[-outliers1,]
+plot(ymd(noout$Date), noout$Close, xlab = "Date", ylab = "DOW")
+points(ymd(out$Date), out$Close, col= "red")
+
+plot(ymd(data_daily$Date)[c(-outliers1)], mod1$residuals[c(-outliers)], ylab = "Residuals", xlab = "Date", ylim = c(-.25, .15))
+points(ymd(data_daily$Date)[outliers1], mod1$residuals[outliers], ylab = "Residuals", xlab = "Date", col = "red")
+
+data_daily$Date[outliers1]
+
+```
+
+```{r}
+plot(ymd(data_daily$Date), mod1$residuals, ylab = "Change in residual", xlab = "Date")
+abline(h = -3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations below
+abline(h = 3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations above
+
+```
+
+
+## Economic Structure
+
+```{r}
+# All Variables
+reg3 <- lm(log(DOW_Close)~
+             poly(time(DATE),degree = 1,raw = T)+NETEXP+ gdp + unemployment +  oil + inflation + consumer_confidence + federal_funds_rate,data=data)
+car::vif(reg3)
+acf(resid(mod1))
+
+data2 <- na.omit(data)
+mod1 <- arima(resid(reg3),order = c(1,0,0))
+plot(ymd(data2$DATE), resid(mod1))
+points(ymd(data2$DATE)[outliersmonsig+1], resid(mod1)[outliersmonsig+1], col = "red")
+mod1
+tsdiag(mod1)
+coeftest(x = mod1)
+#ts(resid(reg3))
+```
+
+```{r}
+# Removed GDP and Net Exports (note that these were the two quarterly variables)
+reg3 <- lm(log(DOW_Close)~
+             poly(time(DATE),degree = 1,raw = T)+  unemployment +  oil + inflation + consumer_confidence + federal_funds_rate,data=data)
+car::vif(reg3)
+acf(resid(mod1))
+
+data2 <- na.omit(data)
+mod1 <- arima(resid(reg3),order = c(1,0,0))
+plot(ymd(data2$DATE), resid(mod1))
+points(ymd(data2$DATE)[outliersmonsig+1], resid(mod1)[outliersmonsig+1], col = "red")
+mod1
+tsdiag(mod1)
+coeftest(x = mod1)
+#ts(resid(reg3))
+```
+
+
+
+
+## Playing around with grouping outliers...
+
+"1982-08-18" 
+
+
+
+"1982-10-26" "1982-11-04" 
+
+
+
+"1986-09-12" 
+
+
+
+"1987-10-19" "1987-10-20" "1987-10-22" "1987-10-23" "1987-10-27" "1987-10-30" 
+
+"1987-12-01" "1987-12-04"
+
+
+
+"1988-01-11" 
+
+
+
+"1988-04-15" 
+
+
+
+"1989-10-16" 
+
+
+
+"1990-08-07" 
+
+
+
+
+"1991-01-18" 
+
+
+
+"1991-11-18"
+
+
+
+"1997-10-28" "1997-10-29" 
+
+
+
+"1998-08-28" "1998-09-01" 
+
+"1998-09-09" 
+
+
+
+"1998-10-16"
+
+
+
+"2000-03-16" "2000-03-17" 
+
+
+
+"2000-04-17" 
+
+
+
+"2001-03-13" 
+
+
+
+"2001-09-18" "2001-09-21"
+
+
+
+"2002-07-22" "2002-07-25" "2002-07-30" 
+
+
+
+"2002-09-30" "2002-10-02" 
+
+"2002-10-10" "2002-10-11" "2002-10-16" 
+
+
+
+"2008-01-24" 
+
+
+
+
+"2008-03-12" "2008-03-19" 
+
+
+
+"2008-09-16" "2008-09-18" "2008-09-19" "2008-09-23" "2008-09-30" "2008-10-03" "2008-10-08" "2008-10-10" "2008-10-14" "2008-10-16" "2008-10-17" "2008-10-21" "2008-10-23"
+"2008-10-27" "2008-10-29" 
+
+"2008-11-06" "2008-11-07" "2008-11-13" "2008-11-14" "2008-11-17" "2008-11-20" "2008-11-21" "2008-11-24" "2008-11-25" "2008-12-02"
+
+"2008-12-10" "2008-12-17" 
+
+"2009-01-21" 
+
+"2009-02-11" 
+
+"2009-02-18" 
+
+"2009-02-24" "2009-02-25" "2009-03-03" "2009-03-06" 
+
+"2009-03-11" 
+
+"2009-03-24" 
+
+"2009-03-31"
+
+"2009-04-03" 
+
+"2009-04-21" 
+
+
+
+
+"2010-05-11" 
+
+"2010-05-21" 
+
+"2010-06-07" 
+
+
+
+"2011-08-05" "2011-08-09" "2011-08-10" "2011-08-11" "2011-08-12" 
+
+"2011-08-22" 
+
+
+
+"2011-12-01"
+
+
+
+"2015-08-25" 
+
+
+
+"2018-02-06" "2018-02-09" 
+
+"2018-12-27" "2020-02-28" "2020-03-03"
+"2020-03-05" "2020-03-06" "2020-03-10" "2020-03-11" "2020-03-12" "2020-03-13"
+"2020-03-16" "2020-03-17" "2020-03-18" "2020-03-19" "2020-03-23" "2020-03-25"
+"2020-03-27" "2020-04-02" "2020-04-07" "2020-04-09" 
+
+"2020-05-19" 
+
+"2020-06-12"
+
