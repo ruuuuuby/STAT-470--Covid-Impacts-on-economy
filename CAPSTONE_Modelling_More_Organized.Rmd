@@ -114,7 +114,8 @@ abline(h = 3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations abo
 ```{r}
 # All Variables
 reg3 <- lm(log(DOW_Close)~
-             poly(time(DATE),degree = 1,raw = T)+NETEXP+ gdp + unemployment +  oil + inflation + consumer_confidence + federal_funds_rate,data=data)
+             poly(time(DATE),degree = 1,raw = T)+
+             NETEXP+ gdp + unemployment +  oil + inflation + consumer_confidence + federal_funds_rate,data=data)
 car::vif(reg3)
 acf(resid(mod1))
 
@@ -131,7 +132,8 @@ coeftest(x = mod1)
 ```{r}
 # Removed GDP and Net Exports (note that these were the two quarterly variables)
 reg3 <- lm(log(DOW_Close)~
-             poly(time(DATE),degree = 1,raw = T)+  unemployment +  oil + inflation + consumer_confidence + federal_funds_rate,data=data)
+             #poly(time(DATE),degree = 1,raw = T)+  
+             unemployment +  oil + inflation + consumer_confidence + federal_funds_rate,data=data)
 car::vif(reg3)
 acf(resid(mod1))
 
@@ -151,19 +153,20 @@ coeftest(x = mod1)
 # basic idea doesn't change 
 
 # Make time series data and only pick time where all variables have values
-Dow=as.ts(data$DOW_Close[2:475])
-netexp=na.omit(as.ts(data$NETEXP[2:475]))
-unemployment=na.omit(as.ts(data$unemployment[2:475]))
-oil=na.omit(as.ts(data$oil[2:475]))
-gold=na.omit(as.ts(data$gold[2:475]))
-cpi=na.omit(as.ts(data$cpi[2:475]))
-ffr=na.omit(as.ts(data$federal_funds_rate[2:475]))
-gdp=na.omit(as.ts(data$gdp[2:475]))
-cci=na.omit(as.ts(data$consumer_confidence[2:475]))
+Dow=as.ts(log(data$DOW_Close[2:474])-log(data$DOW_Close[1:473])) # Fixes the stationarity issues
+netexp=na.omit(as.ts(data$NETEXP[2:474]))
+unemployment=na.omit(as.ts(data$unemployment[2:474]))
+oil=na.omit(as.ts(data$oil[2:474]))
+gold=na.omit(as.ts(data$gold[2:474]))
+cpi=na.omit(as.ts(data$inflation[2:474]))
+ffr=na.omit(as.ts(data$federal_funds_rate[2:474]))
+gdp=na.omit(as.ts(data$gdp[2:474]))
+cci=na.omit(as.ts(data$consumer_confidence[2:474]))
 
 # Mean strucutre modelling
 
-regmodel=lm(Dow~netexp+unemployment+oil+gold+cpi+ffr+gdp+cci)
+#regmodel=lm(Dow~netexp+unemployment+oil+gold+cpi+ffr+gdp+cci)
+regmodel=lm(Dow~unemployment+oil+gold+cpi+ffr+cci)
 summary(regmodel)
 plot(regmodel,which=1:4)
 acf(residuals(regmodel))
@@ -175,7 +178,50 @@ arimamodel
 tsdiag(arimamodel)
 acf(resid(arimamodel))
 pacf(resid(arimamodel))
-plot(residuals(arimamodel))
+plot(ymd(data2$DATE)[2:474], resid(arimamodel))
+points(ymd(data2$DATE)[outliersmonsig], resid(mod1)[outliersmonsig], col = "red")
+
+plot(ymd(data2$DATE)[2:474], resid(arimamodel), ylim = c(-1000, 1000))
+points(ymd(data2$DATE)[outliersmonsig], resid(mod1)[outliersmonsig], col = "red")
+```
+
+```{r}
+# EVERYTHING AS PERCENT CHANGE...well except for inflation because that already is a percent change
+# Another approach: convert all data into time-series data
+# goal: don't want to directly add time as a predictor in above approach (feel weird)
+# basic idea doesn't change 
+
+# Make time series data and only pick time where all variables have values
+Dow=as.ts(log(data$DOW_Close[2:474])-log(data$DOW_Close[1:473])) # Fixes the stationarity issues
+#netexp=na.omit(as.ts(log(data$NETEXP[2:474]) - log(data$NETEXP[1:473])))
+unemployment=na.omit(as.ts(log(data$unemployment[2:474]) - log(data$unemployment[1:473])))
+oil=na.omit(as.ts(log(data$oil[2:474]) - log(data$oil[1:473])))
+gold=na.omit(as.ts(log(data$gold[2:474]) - log(data$gold[1:473])))
+cpi=na.omit(as.ts(data$inflation[2:474]))
+ffr=na.omit(as.ts(log(data$federal_funds_rate[2:474]) - log(data$federal_funds_rate[1:473])))
+#gdp=na.omit(as.ts(log(data$gdp[2:474]) - log(data$gdp[1:473])))
+cci=na.omit(as.ts(log(data$consumer_confidence[2:474]) - log(data$consumer_confidence[1:473])))
+
+# Mean strucutre modelling
+
+#regmodel=lm(Dow~netexp+unemployment+oil+gold+cpi+ffr+gdp+cci)
+regmodel=lm(Dow~unemployment+oil+gold+cpi+ffr+cci)
+summary(regmodel)
+plot(regmodel,which=1:4)
+acf(residuals(regmodel))
+pacf(residuals(regmodel))
+
+# probably AR(1)
+arimamodel <- arima(residuals(regmodel),order = c(1,0,0))
+arimamodel
+tsdiag(arimamodel)
+acf(resid(arimamodel))
+pacf(resid(arimamodel))
+plot(ymd(data2$DATE)[2:474], resid(arimamodel))
+points(ymd(data2$DATE)[outliersmonsig], resid(mod1)[outliersmonsig], col = "red")
+
+plot(ymd(data2$DATE)[2:474], resid(arimamodel), ylim = c(-1000, 1000))
+points(ymd(data2$DATE)[outliersmonsig], resid(mod1)[outliersmonsig], col = "red")
 ```
 
 
