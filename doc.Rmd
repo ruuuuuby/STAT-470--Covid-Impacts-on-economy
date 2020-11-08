@@ -86,7 +86,7 @@ There were no clear errors or missing values in the dataset as presented.
 
 The descriptive statistics will show the summary statistics including min, max, median, mean, and variance for both control and treatment groups. For the descriptive statistics, we will not separate the left and right hips, rather choosing to explore the differences between left and right hips graphically. 
 
-*Table 2* shows the descriptive statistics for degrees of motions of flexion and rotation if no stretching exercises are applied. For the *SAM*, both rotation and flexion degrees have slight improvement, while flexion seems to improve more. For the *SAV*, there is no obvious fluctuation in either variable. 
+*Table 2* shows the descriptive statistics for degrees of motions of flexion and rotation if no stretching exercises are applied. For the *SAM*, both rotation and flexion degrees have slight improvement. Flexion has improved around 4 degrees and rotation about 1 degree. Thus, flexion seems to improve more. For the *SAV*, there is no obvious fluctuation in either variable, all are in a range of 90 degrees. 
 
 
 ```{r fig.cap="The table displays descriptive statistics for flexion and rotation in control group"}
@@ -113,29 +113,7 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
                           font_size = 9, latex_options = "HOLD_position") 
 ```
 
-```{r fig.cap="The table displays descriptive statistics for flexion and rotation in control group"}
-data$flexiondiff=data$flexionAfter-data$flexionBefore
-data$rotationdiff=data$rotationAfter-data$rotationBefore
-dt<-tidyr::pivot_longer(data[1:24,], 5:10, names_to="Stat")
-stats <- psych::describeBy(
-  x = as.numeric(dt$value), group= dt$Stat,
-  na.rm = TRUE, interp = TRUE, 
-  quant= c(0.25,0.75), skew = TRUE, 
-  digits = 2, mat = TRUE)
-df <- data.frame(
-  Var = stats$group1, 
-  `Sample Min` = stats$min, 
-  `Sample Median` = stats$median, 
-  `Sample Max` = stats$max, 
-  SAM = stats$mean, 
-  SAV = round((stats$sd)^2,3))
-df$SAM=kableExtra::cell_spec(df$SAM, background  = ifelse(df$SAM < 10, "yellow", "white"))
-knitr::kable(df, escape=F,
-             caption = "Statistics in Control Group",
-             align = c('c', rep('r', 9))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position") 
-```
+
 
 *Table 3* shows the summary statistics for treatment group, after streching exercises are applied. For *SAM*, both abilities have degrees improvements of around 7 degrees. Thus, it seems like exercises are effective. The *SAM* for flexion, both before and after, is around 120 degrees, while rotation is around 30 degrees. Thus, flexion abilities seem naturally have more degrees in spines. 
 
