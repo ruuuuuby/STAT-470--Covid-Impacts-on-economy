@@ -1,0 +1,541 @@
+---
+title: "Case Study: Ankylosing Spondylities"
+author: 'Leah Hunt, Ziling Zhang, Jiahui Cheng'
+date: 'October 26, 2020'
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+```{r Front Matter, include=FALSE}
+# clean up & set default chunk options
+rm(list = ls())
+knitr::opts_chunk$set(echo = FALSE,message=FALSE,warning = FALSE)
+# packages
+library(tidyverse) 
+library(mosaic)
+#library(summarytools)
+library(kableExtra)
+library(magrittr)
+library(lme4)
+library(lmerTest)
+# Data
+data <- read.csv("Ankylosing_Spondilitus_data_clean.csv")
+colnames(data)[1] <- "patientNo"
+```
+
+
+\newpage
+
+
+# Project Description
+
+Ankylosing spondylitis (AS) is an inflammatory disease which limits the motion of the spine and muscles. The disease affects the joints of the spinal and peripheral joints such as the shoulder, hip, knee, and ankle. If ribs are affected, it can be difficult to breathe deeply. As a result, people with AS demonstrate inspiratory muscle fatigue during exercise and limited capacity of maximal oxygen. These restrictions lead to decreased daily activity and to decreased quality of life in people with AS.
+
+Some research reveals that exercise is as crucial as drug treatment in the management of AS. To further confirm this hypothesis, a study was carried out at the Royal National Hospital to examine the effects of daily stretching of tissues around the hip on the joints flexibility of AS patients.
+
+In this study, out of 39 patients with AS, 12 were randomly chosen to a control group receving the standard treatment. The other 27 patients received additional stretching excersices. Several measurements were made on each hip when the patients were admitted and three weeks after the treatment. This report will focus on two important measure, flexion and lateral rotation.
+
+
+## Research Questions
+
+
+**Question:**   Is stretching effective in improving flexion and rotation abilities?
+
+## Statistical Research Questions
+
+
+**Question:**   Does whether or not an individual stretches have a significant impact on their ending flexion and rotation scores at the .05 significance level?
+
+
+## Variables
+
+We analyzed 7 variables collected in the study. For our exploratory analysis, we have also added two variables, *flexiondiff* and *rotationdiff*, which are the changes in flexion and rotation respectively from the before score to the after score. These variables will not be used in modelling, however, as our chosen models instead consider the after score as the response with the before score, hip, patient, and treatment as predictors, with one model for flexion and one for rotation. Table 1 provides the name and a brief description of each variable.
+
+```{r fig.cap= "Variables description and measurements"}
+# Variable table
+variable<-data.frame(
+  No = c(1,2,3,4,5,6,7,8,9),
+  Variable=c("flexionBefore","flexionAfter","rotationBefore","rotationAfter",
+             "hip","treatment","patient", "flexiondiff", "rotationdiff"),
+  Description = 
+    c("hip joints flexion before treatment",
+      "hip joints flexion after treatment",
+      "hip joints rotation before treatment","hip joints rotation after treatment",
+      "Right or Left",
+      "Control or Stretch",
+      "unique patient identification number", 
+      "Difference between flexionAfter and flexionBefore",
+      "Difference between rotationAfter and rotationBefore"), 
+  Units = c('degrees','degrees','degrees','degrees','','','1-39','degrees','degrees'))
+knitr::kable(variable,
+             caption = "Variable Attributes",
+             align = c('c', rep('l', 7)),format="latex") %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 7, latex_options = "HOLD_position")
+```
+
+We also note that flexion and rotation do have slightly different scoring ranges, in spite of being measured with the same units. In particular, flexion scores range from 77 to 139 degrees while rotations scores range from 2 to 50 degrees.
+
+
+
+# Exploratory Data Analysis (EDA)
+
+There were no clear errors or missing values in the dataset as presented. 
+
+The descriptive statistics will show the summary statistics including min, max, median, mean, and variance for both control and treatment groups. For the descriptive statistics, we will not separate the left and right hips, rather choosing to explore the differences between left and right hips graphically. 
+
+*Table 2* shows the descriptive statistics for degrees of motions of flexion and rotation if no stretching exercises are applied. For the *SAM*, both rotation and flexion degrees have slight improvement, while flexion seems to improve more. For the *SAV*, there is no obvious fluctuation in either variable. 
+
+
+```{r fig.cap="The table displays descriptive statistics for flexion and rotation in control group"}
+data$flexiondiff=data$flexionAfter-data$flexionBefore
+data$rotationdiff=data$rotationAfter-data$rotationBefore
+dt<-tidyr::pivot_longer(data[1:24,], 5:10, names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df <- data.frame(
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3))
+df$SAM=kableExtra::cell_spec(df$SAM, background  = ifelse(df$SAM < 10, "yellow", "white"))
+knitr::kable(df, escape=F,
+             caption = "Statistics in Control Group",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+
+```{r fig.cap="The table displays descriptive statistics for flexion and rotation in control group"}
+data$flexiondiff=data$flexionAfter-data$flexionBefore
+data$rotationdiff=data$rotationAfter-data$rotationBefore
+dt<-tidyr::pivot_longer(data[1:24,], 5:10, names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df <- data.frame(
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3))
+df$SAM=kableExtra::cell_spec(df$SAM, background  = ifelse(df$SAM < 10, "yellow", "white"))
+knitr::kable(df, escape=F,
+             caption = "Statistics in Control Group",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+
+*Table 3* shows the summary statistics for treatment group, after streching exercises are applied. For *SAM*, both abilities have degrees improvements of around 7 degrees. Thus, it seems like exercises are effective. The *SAM* for flexion, both before and after, is around 120 degrees, while rotation is around 30 degrees. Thus, flexion abilities seem naturally have more degrees in spines. 
+
+One thing notice from both control and treatment group is the *SAV* for flexion and rotation. Both before and after flexion variables have larger *SAV* than rotation. Thus, flexion abilities seem to have more fluctuation than rotation, though this could simply be a product of the scale of these two variables. We also notice that the statistics for the treatment group do seem generally higher, particularly considering the median and means of the after and difference scores, which indicates that the treatment appears to have a positive affect relative to the control.
+
+
+```{r fig.cap="The table displays descriptive statistics for flexion and rotation in treatment group"}
+data$flexiondiff=data$flexionAfter-data$flexionBefore
+data$rotationdiff=data$rotationAfter-data$rotationBefore
+dt<-tidyr::pivot_longer(data[25:78,], 5:10, names_to="Stat")
+stats <- psych::describeBy(
+  x = as.numeric(dt$value), group= dt$Stat,
+  na.rm = TRUE, interp = TRUE, 
+  quant= c(0.25,0.75), skew = TRUE, 
+  digits = 2, mat = TRUE)
+df <- data.frame(
+  Var = stats$group1, 
+  `Sample Min` = stats$min, 
+  `Sample Median` = stats$median, 
+  `Sample Max` = stats$max, 
+  SAM = stats$mean, 
+  SAV = round((stats$sd)^2,3))
+df$SAM=kableExtra::cell_spec(df$SAM, background  = ifelse(df$SAM < 10, "yellow", "white"))
+df$SAV=kableExtra::cell_spec(df$SAV, background  = ifelse(df$SAV >140, "yellow", "white"))
+knitr::kable(df, escape=F,
+             caption = "Statistics in Treatment Group",
+             align = c('c', rep('r', 9))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position") 
+```
+ 
+
+To better see these improvements and to also account for the differences between the right and left hips, *Figure 1* and *Figure 2* show the difference from prior to post score for each of the hips for flexion and rotation respectively. Looking at these plots, we do see the length of the arrows, which indicates the amount of change, appear to be longer for the treatment groups than the control groups in both cases. We also see that the right and left hip of an individual patient tend to be similar, though particularly in the rotation plot, we may suspect that left hips have less of a tendency to increase, especially in the control group.
+
+```{r fig.height=3,fig.width=10,fig.cap="This plot shows the changes in flexion scores for each of the patients, showing the left and right hip next to one another. Note that the observations to the left of the black line are from the control group and to the right are the treatment group."}
+# data %>%
+#   gather("key","value",5:6) %>%
+#   filter(key %in% c("flexionAfter", "flexionBefore")) %>%
+#   ggplot(aes(x=value,fill=key)) + 
+#   geom_histogram(aes(y = ..density..),alpha=0.3,colour="grey40",bins=20) +
+#   geom_density(colour="grey40",alpha=0.1) +
+#   facet_grid(.~treatment) + 
+#   xlab("flexion")
+colors <- c("Left Hip" = "blue", "Right Hip" = "red")
+plot<-ggplot2::ggplot(aes(x = patientNo), data= data) +
+  geom_point(aes(x = patientNo + .1, y = flexionBefore), 
+             color = "red", data = data[data$hipRL == "right",]) + 
+        geom_point(aes(x = patientNo + .1, y = flexionAfter), 
+                   color = "red", data = data[data$hipRL == "right",]) +
+        geom_point(aes(x = patientNo - .1, y = flexionBefore), 
+                   color = "blue", data = data[data$hipRL == "left",]) + 
+        geom_point(aes(x = patientNo - .1, y = flexionAfter), 
+                   color = "blue", data = data[data$hipRL == "left",]) +
+  geom_segment(aes(x = patientNo + .1, xend = patientNo + .1, 
+                   y = flexionBefore, yend = flexionAfter, 
+                   color = "Right Hip"), data = data[data$hipRL == "right",],
+               arrow = arrow(length = unit(0.1, "inches")))+
+   geom_segment(aes(x = patientNo - .1, xend = patientNo - .1, y = flexionBefore, 
+                    yend = flexionAfter, color = "Left Hip"), 
+                data = data[data$hipRL == "left",], 
+                arrow = arrow(length = unit(0.1, "inches")))+
+        geom_vline(xintercept = 12.5) +
+  labs(x = "Patient",
+         y = 'Flexion Score',
+         color = "Legend") +
+        ggtitle("Flexion Changes for Left and Right Hips")+
+  
+    scale_color_manual(values = colors) +
+        theme(axis.text = element_text(size=10),
+              plot.title = element_text(size=10, face="bold",hjust=0.5),
+              axis.title = element_text(size=10),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=10),
+              legend.title = element_text(size=10)
+        )
+plot
+```
+
+
+\newpage
+
+
+
+```{r fig.height=3,fig.width=10,fig.cap="This plot shows the changes in rotation scores for each of the patients, showing the left and right hip next to one another. Note that the observations to the left of the black line are from the control group and to the right are the treatment group."}
+# Figure 2
+# data %>%
+#   gather("key","value",7:8) %>%
+#   filter(key %in% c("rotationAfter", "rotationBefore")) %>%
+#   ggplot(aes(x=value,fill=key)) + 
+#   geom_histogram(aes(y = ..density..),alpha=0.3,colour="grey40",bins=20) +
+#   geom_density(colour="grey40",alpha=0.1) +
+#   facet_grid(.~treatment) + 
+#   xlab("rotation")
+colors <- c("Left Hip" = "blue", "Right Hip" = "red")
+plot<-ggplot2::ggplot(aes(x = patientNo), data= data) +
+  geom_point(aes(x = patientNo + .1, y = rotationBefore), 
+             color = "red", data = data[data$hipRL == "right",]) + 
+        geom_point(aes(x = patientNo + .1, y = rotationAfter), 
+                   color = "red", data = data[data$hipRL == "right",]) +
+        geom_point(aes(x = patientNo - .1, y = rotationBefore), 
+                   color = "blue", data = data[data$hipRL == "left",]) + 
+        geom_point(aes(x = patientNo - .1, y = rotationAfter), 
+                   color = "blue", data = data[data$hipRL == "left",]) +
+  geom_segment(aes(x = patientNo + .1, xend = patientNo + .1, 
+                   y = rotationBefore, yend = rotationAfter, color = "Right Hip"), 
+               data = data[data$hipRL == "right",], 
+               arrow = arrow(length = unit(0.1, "inches")))+
+   geom_segment(aes(x = patientNo - .1, xend = patientNo - .1, y = rotationBefore, 
+                    yend = rotationAfter, color = "Left Hip"), 
+                data = data[data$hipRL == "left",], 
+                arrow = arrow(length = unit(0.1, "inches")))+
+        geom_vline(xintercept = 12.5) +
+  labs(x = "Patient",
+         y = 'Rotation Score',
+         color = "Legend") +
+        ggtitle("Rotation Changes for Left and Right Hips")+
+  
+    scale_color_manual(values = colors) +
+        theme(axis.text = element_text(size=10),
+              plot.title = element_text(size=10, face="bold",hjust=0.5),
+              axis.title = element_text(size=10),
+              panel.background = element_rect(fill = "white", color="black"),
+              legend.text = element_text(size=10),
+              legend.title = element_text(size=10)
+        )
+plot
+```
+
+
+
+
+After examing the distribution of measurement, it seems appropriate to use the difference of measurement after and before the treatment as an indicator of the improvement of the patients. We will use two variables *flexionIncrease* and *rotationIncrease* to denote the increase for the two measurements.
+Figures 3 and 4 show the comparison of the increase on left and right hips and on control and stretch groups.
+
+*Figure 3* is the boxplot for flexionIncrease. It seems that there are some potential outliers that falls out of range. However, considering flexionIncrease is a calculated data and both flexionBefore and flexionAfter don't show typical outliers, we will not attempt to remove these points. The boxplot shows the left and right hips behave similarly for flexion, though the left hips do appear somewhat more variable, especially for the control group. We also see that the treatment group appears to have slightly higher increases than the control group.
+
+```{r fig.height=3,fig.weight=10,fig.cap="This plot shows the increases in flexion by hip and treatment group. Notice that the treatment group appears to do slightly better than the control for both hip types while the right and left hip distributions look similar."}
+# Figure 3
+data %>%
+  mutate(flexionIncrease = flexionAfter-flexionBefore, 
+         rotationIncrease = rotationAfter-rotationBefore) %>%
+  ggplot(aes(y=flexionIncrease, x=hipRL, fill=treatment)) +
+  ggtitle("Boxplot of Flexion Increase")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  xlab("Hip")+
+  ylab("Flexion Increase")+
+  geom_boxplot()
+```
+
+
+*Figure 4* shows similar boxplots for rotation. Here, it seems that treatment group might have better performance in motions degrees with this difference much more distinct compared to flexion. There seems to be a bit more of s difference between the left and the right hips as well, with the right hips appearing to outperform the left in both treatment groups.
+
+```{r fig.height=3,fig.weight=10,fig.cap="This plot shows the increases in rotation score by both hip type and treatment level. Notice that the treatment plots seem to be higher than the control group, and the right hip plots seem to be higher than the left hip plots."}
+# Figure 4
+data %>%
+  mutate(flexionIncrease = flexionAfter-flexionBefore, 
+         rotationIncrease = rotationAfter-rotationBefore) %>%
+  ggplot(aes(y=rotationIncrease, x=hipRL, fill=treatment)) +
+    ggtitle("Boxplot of Rotation Increase")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  xlab("Hip")+
+  ylab("Rotation Increase")+
+  geom_boxplot()
+```
+
+
+
+# Statistical Analysis
+
+## Model Structure
+
+We will build a multi mixed-effect linear model for this project. The response variables will be *flexionAfter* and *rotationAfter* for both abilities. The independent variables include *flexionBefore* and *rotationBefore* as random effects variables, *hip* (right or left) and *treatment* (control or stretch) are fixed effects variables. *patientNo* will also be random effects variable since for each patient there is right hip data and left hip data. 
+
+The two level model can be expressed as
+
+-Level One (Composite model)
+
+$$flexionAfter_{ij} = \beta_1*flexionBefore_{ij} + \beta_2*hip + \beta_3*treatment + \beta_{4_i} + \epsilon_{ij} \space \text{where}\space \epsilon_{ij}\sim N(0,\sigma_{\epsilon}) $$
+-Level Two (Effects on PatientNo)
+
+$$\beta_{4_i} = \alpha_i +  \mu_i\space\text{where}\space \epsilon_{i}\sim N(0,\sigma_{\mu})$$
+$$\alpha_i\space\text{is the distinct observation we have}$$
+Note that in this formulation, hip = 0 if it is a left hip and 1 if it is a right hip. Likewise, treatment = 0 if it is the control and 1 if it is the treatment group. The index i represents the patient number and j represents which hip is being considered.
+
+The assumptions of this model are discussed and checked in Appendix A.
+
+
+## Model Results
+
+Considering the model for flexion, the results of which are shown in *Table 4 and 5*, we see that after controlling for the variance between patients, the prior flexion score, and any differences between the left and right hip, there is a significant, defined as having a p-value of less than .05, which means that there is less than a .05 chance that results at least as extreme as were seen would occur if the variable was not significant, improvement from stretching, with the expected improvement, all other things constant, being about 7.8.
+
+Moreover, the coefficient of hip is -0.23. Thus, right hips tend to have slightly worse performance than left hip if the other variables are held constant. However, the high p value for hip tells us that hip is not a significant predictor of the ending flexion score.
+
+The variances of patientsNo and flexionBefore are 25, 63, respectively. These variables are considered significant as the Bonferroni Adjusted confidence intervals (shown in Appendix D) do not include 0. 
+
+```{r Model1-flexion} 
+data$patientNo <- as.factor(data$patientNo)
+model1Flexion <- lmer(flexionAfter ~ (1 | flexionBefore) + treatment + 
+                        hipRL + (1 | patientNo), data = data)
+mod <- summary(model1Flexion)$coefficients
+rownames(mod) <- c("(Intercept)", "Treatment", "Right Hip")
+knitr::kable(mod, escape=F,
+             align = c('c', rep('r', 9)),
+             caption = "Effects on Flexion Improvement") %>%
+  kableExtra::kable_styling(latex_options = "HOLD_position") 
+m <- summary(model1Flexion)
+n <- m$varcor
+df <- data.frame(Group = c("Patient", "Flexion Before", "Residual"), 
+                 Variance = c(25.999, 63.097, 8.875))
+#n$Std.Dev. <- as.numeric(n$Std.Dev.)^2
+knitr::kable(df, escape=F,
+             align = c('c', rep('r', 9)), caption = "Variance for Random Effects of Flexion") %>%
+  kableExtra::kable_styling(latex_options = "HOLD_position") 
+```
+ 
+Considering the model for rotation, shown in *Tables 6 and 7*, we see that after controlling for the variance between patients, the prior rotation score, and any differences between the left and right hip, there is a significant, using the same metric as flexion with a p-value <.05, improvement from stretching, with the expected improvement, all other things constant, being about 2.9.
+ 
+
+The effect of the hip, right or left, is interesting in that it only has a significant effect for the rotation score. In fact, the right hip is expected to have an ending rotation score 5.8 better than the left, all other things equal. A possible reason for this result could be that the more people tend to be right leg dominant, so the daily actions of the right hip may have differences that impact the rotation score. Of course, this is purely a guess as to a possible cause that would require further analysis to prove or disprove.
+
+
+The variances of patientsNo and rotationBefore are 23, 65, repesctively. These variables are considered significant as the Bonferroni Adjusted confidence intervals (shown in Appendix D) do not include 0. 
+
+ 
+ 
+```{r Model1-rotation} 
+model1Rotation <- lmer(rotationAfter ~ (1 | rotationBefore) + hipRL + 
+                         treatment + (1 | patientNo), data = data)
+mod <- summary(model1Rotation)$coefficients
+rownames(mod) <- c("(Intercept)", "Treatment", "Right Hip")
+# knitr::kable(mod, escape=F,
+#              align = c('c', rep('r', 9)),
+#              caption = "Effects on Rotation Improvement") %>%
+#   kableExtra::kable_styling(position ="float_left", full_width = F) 
+m <- summary(model1Rotation)
+n <- m$varcor
+df <- data.frame(Group = c("Patient", "Rotation Before", "Residual"), 
+                 Variance = c(23.218, 65.006, 7.807))
+#n$Std.Dev. <- as.numeric(n$Std.Dev.)^2
+#gridExtra::grid.arrange(
+knitr::kable(mod, escape=F,
+             align = c('c', rep('r', 9)),
+             caption = "Effects on Rotation Improvement") %>%
+  kableExtra::kable_styling(latex_options = "HOLD_position")
+knitr::kable(df, escape=F,
+             align = c('c', rep('r', 9)), , caption = "Variance for Random Effects of Rotation") %>%
+  kableExtra::kable_styling(latex_options = "HOLD_position") 
+#nrow = 1
+#)
+```
+
+
+As a conclusion, the variation of slope and coefficients of random effects of both models are shown above, adding only fixed effects, we have
+
+$$Predicted\space flexionAfter_{ij} = 114.7273+\beta_1*flexionBefore_{ij} -0.2293*hip + 7.8325*treatment + \beta_{4_i}  $$
+ $$Predicted\space rotationAfter_{ij} = 23.064+\beta_1*rotationBefore_{ij} +2.88*hip + 5.834*treatment + \beta_{4_i}  $$
+ 
+ 
+
+
+
+
+# Recommendations 
+
+**Research Question:**  Will treatment be effective in improving flexion and rotation abilities?
+
+The treatment seems to be effective in both flexion and rotation abilities from the model results. Moreover, the hip also matters in rotation abilities with right hips generally having a better result. Thus, stretching exercises show effective results in helping patients live with Ankulosing Sponsilitus. 
+
+For further research, we will recommend the client to look for other effects of stretching exercises such as other motions in addition to flexion and rotation. Likewise, other body parts, such as the spine, may be affected differently than the hip, so this is a similar future area of exploration. Lastly, we recommend further research into why the right hip seemed to do overall better than the left for rotation. While we hypothesize that it may be related to the fact that right leg dominance is more common than left leg dominance, we cannot draw any inference on this topic from our analysis. Furthermore, understanding this difference could lead the client to new methods of lessening the affects of Ankulosing Sponsilitus.
+
+
+# Additional Considerations and limitations
+
+Some other factors that may also affect the improvement like patients age, years of getting AS, health condition etc. are not included in the dataset. That information will be helpful to further distinguish the reason of improvement and were not factored into this model.
+
+The observations here are not necessarily independent, though our model assumes that they are. If the observations were taken on people who are related or even who are friends, meaning they may share some other daily habits, then there could be assumption violations built into the model.
+
+# Resources
+
+http://www.lowtem.hokudai.ac.jp/plantecol/akihiro/obenkyou/GLMMexample_En.pdf
+
+https://bookdown.org/roback/bookdown-BeyondMLR/ch-multilevelintro.html
+
+https://psu.mediaspace.kaltura.com/media/STAT+470W--Ankylosing+spondylitis+interview+with+Dr.+Elizabeth+Nemenz/1_n2v1u1p8
+
+
+\newpage
+
+
+# Technical Appendix
+
+## A: Assumption checks
+
+Generally, multilevel models response is assumed to be linear with respect to the predicted value with constant variance. Residual plots are a useful tool to examine these assumptions. Our model also assumes that the residuals follow the Normal distribution. We can use Q-Q plot to test the normality of model residuals. From QQ plots, the residuals of the two models are close to normal distributions.Overall, the results indicate that our model meets the basic assumptions.
+
+```{r fig.height=3,fig.weight=10,fig.cap="Residuals plot for models"}
+par(mfrow=c(2,2))
+gridExtra::grid.arrange(
+ggplot(fortify.merMod(model1Flexion), aes(x = .fitted, y = .resid)) + 
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  ylim(-11,17) +
+  ggtitle("residuals of flexion model")
+,
+ggplot(fortify.merMod(model1Rotation), aes(x = .fitted, y = .resid)) + 
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  ylim(-11,17) +
+  ggtitle("residuals of rotation model")
+,
+nrow = 1)
+```
+
+
+
+
+```{r fig.height=3,fig.weight=10,fig.cap="Q-Q plot for models"}
+gridExtra::grid.arrange(
+ggplot(fortify.merMod(model1Flexion), aes(sample = .resid)) + 
+  stat_qq() + 
+  stat_qq_line() +
+  ylim(-10,10) +
+  ggtitle("Q-Q plot of flexion model")
+,
+ggplot(fortify.merMod(model1Rotation), aes(sample = .resid)) + 
+  stat_qq() + 
+  stat_qq_line()+
+  ylim(-10,10) +
+  ggtitle("Q-Q plot of rotation model")
+,
+nrow = 1)
+```
+
+\newpage
+
+## B Correlation plot for flexionIncrease and RotationIncrease on both hips
+
+
+We will look at the correlations among patients' left and right hips. It is natural to think that the improvement on the same patients should be positively correlated. The following figure further confirms this relationship. 
+
+```{r EDA-corrplot, fig.cap="scatterplot of increase in left and right hips"}
+# Figure 8
+data <- data %>%
+  mutate(flexionIncrease = flexionAfter-flexionBefore, 
+         rotationIncrease = rotationAfter-rotationBefore)
+gridExtra::grid.arrange(
+data %>%
+  select(treatment, patientNo, flexionIncrease, hipRL) %>%
+  group_by(patientNo) %>%
+  spread(hipRL, flexionIncrease) %>%
+  ggplot(aes(x=left, y=right)) +
+  geom_smooth(method = 'loess', alpha=0.1, span=1, linetype = "dashed")+
+  geom_point(aes(color=treatment)) +
+  geom_vline(xintercept = 0) + 
+  geom_hline(yintercept = 0) +
+  ggtitle("flexion Increase")
+,
+data %>%
+  select(treatment, patientNo, rotationIncrease, hipRL) %>%
+  group_by(patientNo) %>%
+  spread(hipRL, rotationIncrease) %>%
+  ggplot(aes(x=left, y=right)) +
+  geom_smooth(method = 'loess',alpha=0.1, span=1, linetype = "dashed")+
+  geom_point(aes(color=treatment)) +
+  geom_vline(xintercept = 0) + 
+  geom_hline(yintercept = 0) +
+  ggtitle("ratation Increase")
+,nrow = 1)
+```
+\newpage
+
+## C Scatter plot for flexionIncrease and RotationIncrease 
+
+The vertical distance from each point to the diagonal line `y = x` represents the change of measurements after treatment. Above the line means an inprovement whereas below the line means a worse condition. These two figures also show that the stretch group has better improvement than the control group since the fitted curve for the stretch group is above the curve for the control group. 
+
+
+```{r fig.height=3,fig.weight=10,fig.cap="Scatter plot of flexion before and after treatment"}
+data %>%
+  ggplot(aes(x = flexionBefore, y = flexionAfter)) + 
+  geom_point(aes(color = treatment)) + 
+  geom_smooth(aes(color = treatment),method = "loess", se = 0) + 
+  geom_abline(slope = 1)
+```
+
+```{r fig.height=3,fig.weight=10,fig.cap="Scatter plot of rotation before and after treatment"}
+data %>%
+  ggplot(aes(x = rotationBefore, y = rotationAfter)) + 
+  geom_point(aes(color = treatment)) + 
+  geom_smooth(aes(color = treatment),method = "loess", se = 0) + 
+  geom_abline(slope = 1)
+```
+
+\newpage
+
+## D Bonferroni 95% Confidence Intervals for Flexion and Rotation Variances of Random Effects
+
+When considering whether the random effects were significant in our model, we computed Bonferroni Adjusted 95% confidence intervals for the variance of each of the random effects in each of our models. For the rotation, the variance had a confidence interval of (3.546, 6.809) and the prior rotation score had a confidence interval of (5.440,	10.925). For the flexion, the variance had a confidence interval of (3.2, 6.8) and the prior flexion score had a confidence interval of (5.1, 11.3). For the sake of our model, the most important fact to note about these intervals is that none of them contain 0, which implies that all four of the random effects considered here are considered significant in the model.
+
+
+### R Script
+```{r codeAppendix, ref.label = knitr::all_labels(), echo = TRUE, eval = FALSE}
+# Reprinted code chunks used previously for analysis
+```
