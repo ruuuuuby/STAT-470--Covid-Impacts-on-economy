@@ -43,25 +43,32 @@ In this study, out of 39 patients with AS, 12 were randomly chosen to a control 
 
 **Question:**   Is stretching effective in improving flexion and rotation abilities?
 
+## Statistical Research Questions
+
+
+**Question:**   Does whether or not an individual stretches have a significant impact on their ending flexion and rotation scores at the .05 significance level?
+
 
 ## Variables
 
-We analyzed 7 variables collected in the study. Table 1 provides the name and a brief description of each variable. 
+We analyzed 7 variables collected in the study. For our exploratory analysis, we have also added two variables, *flexiondiff* and *rotationdiff*, which are the changes in flexion and rotation respectively from the before score to the after score. These variables will not be used in modelling, however, as our chosen models instead consider the after score as the response with the before score, hip, patient, and treatment as predictors, with one model for flexion and one for rotation. Table 1 provides the name and a brief description of each variable.
 
 ```{r fig.cap= "Variables description and measurements"}
 # Variable table
 variable<-data.frame(
-  No = c(1,2,3,4,5,6,7),
+  No = c(1,2,3,4,5,6,7,8,9),
   Variable=c("flexionBefore","flexionAfter","rotationBefore","rotationAfter",
-             "hip","treatment","patient"),
+             "hip","treatment","patient", "flexiondiff", "rotationdiff"),
   Description = 
     c("hip joints flexion before treatment",
       "hip joints flexion after treatment",
       "hip joints rotation before treatment","hip joints rotation after treatment",
       "Right or Left",
       "Control or Stretch",
-      "unique patient identification number"), 
-  Units = c('degrees','degrees','degrees','degrees','','','1-39'))
+      "unique patient identification number", 
+      "Difference between flexionAfter and flexionBefore",
+      "Difference between rotationAfter and rotationBefore"), 
+  Units = c('degrees','degrees','degrees','degrees','','','1-39','degrees','degrees'))
 knitr::kable(variable,
              caption = "Variable Attributes",
              align = c('c', rep('l', 7)),format="latex") %>%
@@ -69,12 +76,13 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
                           font_size = 7, latex_options = "HOLD_position")
 ```
 
+We also note that flexion and rotation do have slightly different scoring ranges, in spite of being measured with the same units. In particular, flexion scores range from 77 to 139 degrees while rotations scores range from 2 to 50 degrees.
 
 # Exploratory Data Analysis (EDA)
 
 There were no clear errors or missing values in the dataset as presented. 
 
-The descriptive statistics will show the summary statistics including min, max, median, mean, and variance for both control and treatment groups. For the descriptive statistics, we will not separate the left and right hips, rather choosing to explore the differences between left and right hips graphically. Also note that we have added two variables, *flexiondiff* and *rotationdiff*, which are the changes in flexion and rotation respectively from the before score to the after score.
+The descriptive statistics will show the summary statistics including min, max, median, mean, and variance for both control and treatment groups. For the descriptive statistics, we will not separate the left and right hips, rather choosing to explore the differences between left and right hips graphically. 
 
 *Table 2* shows the descriptive statistics for degrees of motions of flexion and rotation if no stretching exercises are applied. For the *SAM*, both rotation and flexion degrees have slight improvement, while flexion seems to improve more. For the *SAV*, there is no obvious fluctuation in either variable. 
 
