@@ -34,7 +34,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Changes Made
 * pg. 3: Highlighted important SAV and SAM and added more descriptions on them
-* pg. 4-5: Altered the captions of the arrow plots to make clear what the sideways arrowheads represent
+* pg. 4: Altered the captions of the arrow plots to make clear what the sideways arrowheads represent
 
 ### Changes Not Made
 * Group 5 only gave us a meets expectations on two of the three categories but didn't have any negative comments, so we couldn't really address anything for them
@@ -50,7 +50,7 @@ knitr::opts_chunk$set(echo = TRUE)
 * The TA feedback said that most of the other groups did not find flexion significant
 
 ### Changes Made
-* pg. 5: Added a slight explanation as to why to use a mixed effects model and added a footnote explaining the choice of modelling structure, in particular indicating why the difference variables were not used
+* pg. 6: Added a slight explanation as to why to use a mixed effects model and added a footnote explaining the choice of modelling structure, in particular indicating why the difference variables were not used
 * pg. 6: Added a section name  "Statistical Analysis"
 
 ### Changes Not Made
@@ -65,7 +65,7 @@ knitr::opts_chunk$set(echo = TRUE)
 * Group 4 suggested capitalizing limitations in the section title
 
 ### Changes Made
-* pg. 8: capitalized limitations in "Conclusions and limitations"
+* pg. 8: capitalized limitations in "Additional Considerations and limitations"
 
 
 ### Changes Not Made
@@ -81,7 +81,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Changes Made
 
-* pg. 11-13: Added a caption to the correlation plots; in the process, we also swapped the order of Appendix B and C (mostly because the figure numbers weren't working with the original order and the order of these two appendices isn't particularly important)
+* pg. 11-12: Added a caption to the correlation plots; in the process, we also swapped the order of Appendix B and C (mostly because the figure numbers weren't working with the original order and the order of these two appendices isn't particularly important)
 
 ### Changes Not Made
 N/A
