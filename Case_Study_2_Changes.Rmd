@@ -1,0 +1,90 @@
+---
+title: "Case Study 2 Changes"
+author: "Leah Hunt, Ziling Zhang, and Jiahui Cheng"
+date: "11/8/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+### Peer Review Comments
+* Both the TA and Group 4 suggested that we phrase our research question as a statistical research question
+* The TA feedback suggested that we include variable ranges and include the diff variables; Group 4’s feedback also suggested that we include the difference variables as well as mentioning what the response and explanatory variables will be
+* Group 4 and the TA feedback both suggested that table 1 may be slightly more difficult to read
+
+### Changes Made
+* pg. 2: Added a statistical research question.
+* pg. 2: Added flexiondiff and rotationdiff to the variable table and moved their description in text to the variables section instead of the EDA section; elaborated the description of the variables to mention the different ranges for flexion and rotation and clarify which variables will be used in modelling
+* pg. 2: Increase font size on Table 1
+
+### Changes Not Made
+* We were unsure of what was meant by Table 1 was hard to read. We did increase the font size, but we didn't see any major readability problems beyond that
+
+
+## EDA
+### Peer Review Comments
+* The TA feedback suggested more descriptions on SAM and SAV and added these two variables in descriptive statistics
+* Group 4 commented on a lack of captions for the tables
+* Group 4 suggested removing the sideways arrows for the little change cases in the arrow plots 
+* Group 4 suggested changing the axis on the arrow graph to make it more understandable
+
+### Changes Made
+* pg. 3: Highlighted important SAV and SAM and added more descriptions on them
+* pg. 4-5: Altered the captions of the arrow plots to make clear what the sideways arrowheads represent
+
+### Changes Not Made
+* Group 5 only gave us a meets expectations on two of the three categories but didn't have any negative comments, so we couldn't really address anything for them
+* We felt that the lines above the tables do act as captions and that adding more captioning below the table would be redundant and unnecessary
+* We felt that the x axis of the arrow plot was sufficient as really all it does is index the patients and hips, which are explained in the caption; the axis itself is really just an index
+* While we considered changing the sideways arrowheads to something different for cases with little change, we felt that alternatives (such as no arrowheads at all in these cases or reorienting the arrowhead) would only cause more confusion and make the plot look incomplete; we decided to explicitly acknowledge the meanings of the sideways arrows instead
+
+## Statistical Methods
+
+### Peer Review Comments
+* Group 4 recommended a more obvious title for statistical analysis
+* Group 4 suggested better explaining our choice of model 
+* The TA feedback said that most of the other groups did not find flexion significant
+
+### Changes Made
+* pg. 5: Added a slight explanation as to why to use a mixed effects model and added a footnote explaining the choice of modelling structure, in particular indicating why the difference variables were not used
+* pg. 6: Added a section name  "Statistical Analysis"
+
+### Changes Not Made
+* We had no idea what "Almost good, all the words come up with a suitable title." meant in Group 5's feedback
+* We believe that the reason we found flexion to be significant while other groups didn't is because our modelling approach includes the prior score of flexion as a predictor while many of the other analyses we saw only considered the difference. We did find that if you consider only the difference instead of controlling for the starting score, flexion isn't significant, but we think that the starting score does actually effect the difference, which is why we chose the model that we did
+
+
+## Conclusions
+
+### Peer Review Comments
+* Group 5 suggested adding a second "smaller" research question
+* Group 4 suggested capitalizing limitations in the section title
+
+### Changes Made
+* pg. 8: capitalized limitations in "Conclusions and limitations"
+
+
+### Changes Not Made
+* We kept the basic structure of a single research question (but added a statistical one), though by nature this single question could be read as two questions (one for flexion one for rotation), so we did this instead of using Group 5's suggestion
+
+
+
+
+## Figures/Tables
+
+### Peer Review Comments
+* Group 4 suggested to add captions and figure numbers to the correlation plots 
+
+### Changes Made
+
+* pg. 11-13: Added a caption to the correlation plots; in the process, we also swapped the order of Appendix B and C (mostly because the figure numbers weren't working with the original order and the order of these two appendices isn't particularly important)
+
+### Changes Not Made
+N/A
+
+
+

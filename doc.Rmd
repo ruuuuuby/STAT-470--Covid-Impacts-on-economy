@@ -73,7 +73,7 @@ knitr::kable(variable,
              caption = "Variable Attributes",
              align = c('c', rep('l', 7)),format="latex") %>%
 kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 7, latex_options = "HOLD_position")
+                          font_size = 9, latex_options = "HOLD_position")
 ```
 
 We also note that flexion and rotation do have slightly different scoring ranges, in spite of being measured with the same units. In particular, flexion scores range from 77 to 139 degrees while rotations scores range from 2 to 50 degrees.
@@ -170,7 +170,7 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
 
 To better see these improvements and to also account for the differences between the right and left hips, *Figure 1* and *Figure 2* show the difference from prior to post score for each of the hips for flexion and rotation respectively. Looking at these plots, we do see the length of the arrows, which indicates the amount of change, appear to be longer for the treatment groups than the control groups in both cases. We also see that the right and left hip of an individual patient tend to be similar, though particularly in the rotation plot, we may suspect that left hips have less of a tendency to increase, especially in the control group.
 
-```{r fig.height=3,fig.width=10,fig.cap="This plot shows the changes in flexion scores for each of the patients, showing the left and right hip next to one another. Note that the observations to the left of the black line are from the control group and to the right are the treatment group."}
+```{r fig.height=3,fig.width=10,fig.cap="This plot shows the changes in flexion scores for each of the patients, showing the left and right hip next to one another. Note that the observations to the left of the black line are from the control group and to the right are the treatment group. Observations with very little change between the before and after periods are shown with sideways arrowheads."}
 # data %>%
 #   gather("key","value",5:6) %>%
 #   filter(key %in% c("flexionAfter", "flexionBefore")) %>%
@@ -219,7 +219,7 @@ plot
 
 
 
-```{r fig.height=3,fig.width=10,fig.cap="This plot shows the changes in rotation scores for each of the patients, showing the left and right hip next to one another. Note that the observations to the left of the black line are from the control group and to the right are the treatment group."}
+```{r fig.height=3,fig.width=10,fig.cap="This plot shows the changes in rotation scores for each of the patients, showing the left and right hip next to one another. Note that the observations to the left of the black line are from the control group and to the right are the treatment group. Observations with very little change between the before and after periods are shown with sideways arrowheads."}
 # Figure 2
 # data %>%
 #   gather("key","value",7:8) %>%
@@ -307,7 +307,7 @@ data %>%
 
 ## Model Structure
 
-We will build a multi mixed-effect linear model for this project. The response variables will be *flexionAfter* and *rotationAfter* for both abilities. The independent variables include *flexionBefore* and *rotationBefore* as random effects variables, *hip* (right or left) and *treatment* (control or stretch) are fixed effects variables. *patientNo* will also be random effects variable since for each patient there is right hip data and left hip data. 
+We will build a multi mixed-effect linear model for this project as we are interested in modelling both random and fixed effects. The response variables will be *flexionAfter* and *rotationAfter* for both abilities\footnote{At first, it may seem more logical to use the difference between the before and after scores as a response and not include the score before as a predictor. We chose the method that we did, however, due to the potential differences in the amount of change based on where the patient started. Considering only changes from before to after scores excludes the possibility that patients with a lower starting score may have different tendencies to improve than those starting with a higher score.}. The independent variables include *flexionBefore* and *rotationBefore* as random effects variables, *hip* (right or left) and *treatment* (control or stretch) are fixed effects variables. *patientNo* will also be random effects variable since for each patient there is right hip data and left hip data. 
 
 The two level model can be expressed as
 
@@ -407,7 +407,7 @@ The treatment seems to be effective in both flexion and rotation abilities from 
 For further research, we will recommend the client to look for other effects of stretching exercises such as other motions in addition to flexion and rotation. Likewise, other body parts, such as the spine, may be affected differently than the hip, so this is a similar future area of exploration. Lastly, we recommend further research into why the right hip seemed to do overall better than the left for rotation. While we hypothesize that it may be related to the fact that right leg dominance is more common than left leg dominance, we cannot draw any inference on this topic from our analysis. Furthermore, understanding this difference could lead the client to new methods of lessening the affects of Ankulosing Sponsilitus.
 
 
-# Additional Considerations and limitations
+# Additional Considerations and Limitations
 
 Some other factors that may also affect the improvement like patients age, years of getting AS, health condition etc. are not included in the dataset. That information will be helpful to further distinguish the reason of improvement and were not factored into this model.
 
@@ -431,20 +431,20 @@ https://psu.mediaspace.kaltura.com/media/STAT+470W--Ankylosing+spondylitis+inter
 
 Generally, multilevel models response is assumed to be linear with respect to the predicted value with constant variance. Residual plots are a useful tool to examine these assumptions. Our model also assumes that the residuals follow the Normal distribution. We can use Q-Q plot to test the normality of model residuals. From QQ plots, the residuals of the two models are close to normal distributions.Overall, the results indicate that our model meets the basic assumptions.
 
-```{r fig.height=3,fig.weight=10,fig.cap="Residuals plot for models"}
+```{r fig.height=3,fig.weight=10,fig.cap="These plots show the residuals for both of our models. Notice that the residuals are distributed around 0 with no distinct pattern."}
 par(mfrow=c(2,2))
 gridExtra::grid.arrange(
 ggplot(fortify.merMod(model1Flexion), aes(x = .fitted, y = .resid)) + 
   geom_point() +
   geom_hline(yintercept = 0) +
   ylim(-11,17) +
-  ggtitle("residuals of flexion model")
+  ggtitle("Residuals of Flexion Model")
 ,
 ggplot(fortify.merMod(model1Rotation), aes(x = .fitted, y = .resid)) + 
   geom_point() +
   geom_hline(yintercept = 0) +
   ylim(-11,17) +
-  ggtitle("residuals of rotation model")
+  ggtitle("Residuals of Rotation Model")
 ,
 nrow = 1)
 ```
@@ -452,7 +452,7 @@ nrow = 1)
 
 
 
-```{r fig.height=3,fig.weight=10,fig.cap="Q-Q plot for models"}
+```{r fig.height=3,fig.weight=10,fig.cap="These plots test the normality assumption for both of our models. Notice that in both cases, the points fall very close to the line."}
 gridExtra::grid.arrange(
 ggplot(fortify.merMod(model1Flexion), aes(sample = .resid)) + 
   stat_qq() + 
@@ -471,12 +471,38 @@ nrow = 1)
 
 \newpage
 
-## B Correlation plot for flexionIncrease and RotationIncrease on both hips
+
+## B: Scatter plot for flexionIncrease and RotationIncrease 
+
+The vertical distance from each point to the diagonal line `y = x` represents the change of measurements after treatment. Above the line means an inprovement whereas below the line means a worse condition. These two figures also show that the stretch group has better improvement than the control group since the fitted curve for the stretch group is above the curve for the control group. 
+
+
+```{r fig.height=3,fig.weight=10,fig.cap="Scatter plot of flexion before and after treatment"}
+data %>%
+  ggplot(aes(x = flexionBefore, y = flexionAfter)) + 
+  geom_point(aes(color = treatment)) + 
+  geom_smooth(aes(color = treatment),method = "loess", se = 0) + 
+  geom_abline(slope = 1)+
+  ggtitle("Comparing Rotation Before and After Treatment")
+```
+
+```{r fig.height=3,fig.weight=10,fig.cap="Scatter plot of rotation before and after treatment"}
+data %>%
+  ggplot(aes(x = rotationBefore, y = rotationAfter)) + 
+  geom_point(aes(color = treatment)) + 
+  geom_smooth(aes(color = treatment),method = "loess", se = 0) + 
+  geom_abline(slope = 1)+
+  ggtitle("Comparing Rotation Before and After Treatment")
+```
+
+\newpage
+
+## C: Correlation plot for flexionIncrease and RotationIncrease on both hips
 
 
 We will look at the correlations among patients' left and right hips. It is natural to think that the improvement on the same patients should be positively correlated. The following figure further confirms this relationship. 
 
-```{r EDA-corrplot, fig.cap="scatterplot of increase in left and right hips"}
+```{r EDA-corrplot, fig.cap="Scatterplot of increase in left and right hips"}
 # Figure 8
 data <- data %>%
   mutate(flexionIncrease = flexionAfter-flexionBefore, 
@@ -487,11 +513,11 @@ data %>%
   group_by(patientNo) %>%
   spread(hipRL, flexionIncrease) %>%
   ggplot(aes(x=left, y=right)) +
-  geom_smooth(method = 'loess', alpha=0.1, span=1, linetype = "dashed")+
+  geom_smooth(method = 'loess', alpha=0.1, span=1, linetype = "dashed") +
   geom_point(aes(color=treatment)) +
   geom_vline(xintercept = 0) + 
   geom_hline(yintercept = 0) +
-  ggtitle("flexion Increase")
+  ggtitle("Flexion Increase")
 ,
 data %>%
   select(treatment, patientNo, rotationIncrease, hipRL) %>%
@@ -502,35 +528,16 @@ data %>%
   geom_point(aes(color=treatment)) +
   geom_vline(xintercept = 0) + 
   geom_hline(yintercept = 0) +
-  ggtitle("ratation Increase")
-,nrow = 1)
+  ggtitle("Rotation Increase")
+,nrow = 1,
+bottom = grid::textGrob("Figure 9: These plots compare the increases of left and right hips of the same patient.",
+                           x = 0,
+                           y = 0.5,
+                           just = "left"))
 ```
 \newpage
 
-## C Scatter plot for flexionIncrease and RotationIncrease 
-
-The vertical distance from each point to the diagonal line `y = x` represents the change of measurements after treatment. Above the line means an inprovement whereas below the line means a worse condition. These two figures also show that the stretch group has better improvement than the control group since the fitted curve for the stretch group is above the curve for the control group. 
-
-
-```{r fig.height=3,fig.weight=10,fig.cap="Scatter plot of flexion before and after treatment"}
-data %>%
-  ggplot(aes(x = flexionBefore, y = flexionAfter)) + 
-  geom_point(aes(color = treatment)) + 
-  geom_smooth(aes(color = treatment),method = "loess", se = 0) + 
-  geom_abline(slope = 1)
-```
-
-```{r fig.height=3,fig.weight=10,fig.cap="Scatter plot of rotation before and after treatment"}
-data %>%
-  ggplot(aes(x = rotationBefore, y = rotationAfter)) + 
-  geom_point(aes(color = treatment)) + 
-  geom_smooth(aes(color = treatment),method = "loess", se = 0) + 
-  geom_abline(slope = 1)
-```
-
-\newpage
-
-## D Bonferroni 95% Confidence Intervals for Flexion and Rotation Variances of Random Effects
+## D: Bonferroni 95% Confidence Intervals for Flexion and Rotation Variances of Random Effects
 
 When considering whether the random effects were significant in our model, we computed Bonferroni Adjusted 95% confidence intervals for the variance of each of the random effects in each of our models. For the rotation, the variance had a confidence interval of (3.546, 6.809) and the prior rotation score had a confidence interval of (5.440,	10.925). For the flexion, the variance had a confidence interval of (3.2, 6.8) and the prior flexion score had a confidence interval of (5.1, 11.3). For the sake of our model, the most important fact to note about these intervals is that none of them contain 0, which implies that all four of the random effects considered here are considered significant in the model.
 
