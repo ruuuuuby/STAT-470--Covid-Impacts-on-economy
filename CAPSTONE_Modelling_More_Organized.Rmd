@@ -46,7 +46,7 @@ mod1 <- arima(res_temp,order = c(1,0,0))
 
 ```{r}
 outliers <- forecast::tsoutliers(mod1$residuals)$index
-data$DATE[outliers]
+data$DATE[outliers+1]
 data$DATE[which(abs(mod1$residuals)>3*sqrt(var(mod1$residuals)))]
 
 plot(ymd(data$DATE)[2:length(reg2$residuals)], res_temp, ylab = "Change in residual", xlab = "Date")
@@ -217,11 +217,10 @@ arimamodel
 tsdiag(arimamodel)
 acf(resid(arimamodel))
 pacf(resid(arimamodel))
-plot(ymd(data2$DATE)[2:474], resid(arimamodel))
-points(ymd(data2$DATE)[outliersmonsig], resid(mod1)[outliersmonsig], col = "red")
-
-plot(ymd(data2$DATE)[2:474], resid(arimamodel), ylim = c(-1000, 1000))
-points(ymd(data2$DATE)[outliersmonsig], resid(mod1)[outliersmonsig], col = "red")
+plot(ymd(data2$DATE)[2:474], resid(arimamodel), ylab = "Residual", xlab = "Date")
+points(ymd(data2$DATE)[outliersmonsig], resid(arimamodel)[outliersmonsig], col = "red")
+ymd(data2$DATE)[outliersmonsig]
+resid(mod1)[outliersmonsig]
 ```
 
 
@@ -405,4 +404,3 @@ var(na.omit(data$NETEXP))
 "2020-05-19" 
 
 "2020-06-12"
-
