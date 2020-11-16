@@ -217,11 +217,28 @@ arimamodel
 tsdiag(arimamodel)
 acf(resid(arimamodel))
 pacf(resid(arimamodel))
-plot(ymd(data2$DATE)[2:474], resid(arimamodel), ylab = "Residual", xlab = "Date")
+plot(ymd(data2$DATE)[2:474][-outliersmonsig], resid(arimamodel)[-outliersmonsig], ylab = "Residual", xlab = "Date", ylim = c(-.25, .2))
 points(ymd(data2$DATE)[outliersmonsig], resid(arimamodel)[outliersmonsig], col = "red")
-ymd(data2$DATE)[outliersmonsig]
-resid(mod1)[outliersmonsig]
+
 ```
+
+```{r}
+# Permutation testing
+T0 <- abs(mean(resid(arimamodel)[outliersmonsig]) - mean(resid(arimamodel)[-outliersmonsig]))
+num_perm<-10000
+nOutliers <- length(outliersmonsig)
+T_perm<-numeric(num_perm)
+for(i in 1:num_perm){
+  temp <- sample(resid(arimamodel))
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  }
+hist(T_perm)
+abline(v=T0, col = "red")
+
+mean(abs(T_perm)>=abs(T0))
+```
+
+
 
 
 ## Model structure 

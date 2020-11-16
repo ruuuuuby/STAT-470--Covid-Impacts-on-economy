@@ -30,3 +30,21 @@ plot(ymd(data$DATE)[2:nrow(data)], resid(arimamodel), ylab = "Residual", xlab = 
 points(ymd(data$DATE)[outliersmonsig], resid(arimamodel)[outliersmonsig], col = "red")
 abline(h = -3*sqrt(var(arimamodel$residuals)), col = "red") # 3 standard deviations below
 abline(h = 3*sqrt(var(arimamodel$residuals)), col = "red") # 3 standard deviations above
+
+mean(resid(arimamodel)[outliersmonsig])
+mean(resid(arimamodel)[-outliersmonsig])
+
+
+# Permutation testing
+T0 <- abs(mean(resid(arimamodel)[outliersmonsig]) - mean(resid(arimamodel)[-outliersmonsig]))
+num_perm<-10000
+nOutliers <- length(outliersmonsig)
+T_perm<-numeric(num_perm)
+for(i in 1:num_perm){
+  temp <- sample(resid(arimamodel))
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  }
+hist(T_perm)
+abline(v=T0, col = "red")
+
+mean(abs(T_perm)>=abs(T0))
