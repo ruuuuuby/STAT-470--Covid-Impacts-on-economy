@@ -1,0 +1,52 @@
+---
+title: "Analyzing Economic Shocks"
+author: "Ziling Zhang, Leah Hunt, and Jiahui Cheng"
+date: "11/17/2020"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = FALSE,message=FALSE,warning = FALSE)
+```
+
+# Abstract
+
+
+# Introduction
+
+## Background (Lit Review?)
+
+## Motivation
+
+## Data Description
+
+## Research Questions
+
+
+# Exploratory Data Analysis
+
+
+# Identifying and Defining Shock Periods
+
+
+# Modelling
+
+## Analysis on Monthly Data
+
+## Analysis on Daily Data
+
+
+# Discussion
+
+# Limitations and Future Study
+
+
+# Works Cited
+
+# Appendices
+
+
