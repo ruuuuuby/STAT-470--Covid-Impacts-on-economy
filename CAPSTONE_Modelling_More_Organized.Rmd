@@ -238,6 +238,44 @@ abline(v=T0, col = "red")
 mean(abs(T_perm)>=abs(T0))
 ```
 
+```{r}
+# Cross Correlation
+
+#probably not log diff
+Dow=as.ts(log(data$DOW_Close[2:474])-log(data$DOW_Close[1:473])) 
+unemployment=na.omit(as.ts(log(data$unemployment[2:474]) - log(data$unemployment[1:473])))
+oil=na.omit(as.ts(log(data$oil[2:474]) - log(data$oil[1:473])))
+gold=na.omit(as.ts(log(data$gold[2:474]) - log(data$gold[1:473])))
+cpi=na.omit(as.ts(data$inflation[2:474]))
+ffr=na.omit(as.ts(log(data$federal_funds_rate[2:474]) - log(data$federal_funds_rate[1:473])))
+cci=na.omit(as.ts(log(data$consumer_confidence[2:474]) - log(data$consumer_confidence[1:473])))
+
+# ie: Dow_t negatively related to unemployment_t-2
+ccf(Dow,unemployment)
+ccf(Dow,oil)
+ccf(Dow,gold)
+ccf(Dow,cpi)
+ccf(Dow,ffr)
+ccf(Dow,cci)
+alldata=ts.intersect(Dow,un1 = lag(unemployment,-1),un2=lag(unemployment,-2),
+                     oil1=lag(oil,-1), 
+                     gold=lag(gold,-1), 
+                     cpi1=lag(cpi,-1), cpi2=lag(cpi,-2),
+                     ffr2=lag(ffr,-2),
+                     cci=lag(cci,0),cci1=lag(cci,-1))
+
+
+
+modelccf=lm(Dow~un1+un2+oil1+gold+cpi1+cpi2+ffr2+cci+cci1,data=alldata)
+summary(modelccf)
+
+plot(resid(modelccf))
+
+model2=lm(Dow~gold+cci,data=alldata)
+
+
+```
+
 
 
 
