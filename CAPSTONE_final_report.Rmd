@@ -1,28 +1,44 @@
 ---
 title: "Analyzing Economic Shocks"
 author: "Ziling Zhang, Leah Hunt, and Jiahui Cheng"
+subtitle: "Stat 470W"
 date: "11/17/2020"
 output:
   pdf_document:
     toc: yes
     toc_depth: '2'
 ---
-
+\newpage
 ```{r setup, include=FALSE}
 rm(list = ls())
 knitr::opts_chunk$set(echo = FALSE,message=FALSE,warning = FALSE)
+library(lubridate)
+library(ggplot2)
+library("tidyverse")
+library("cluster")
+library("factoextra")
+library(tidyr)
+data <- read.table("economicData.txt", header = TRUE)
+data$inflation <- c(NA, (data$cpi[2:length(data$cpi)] - data$cpi[1:length(data$cpi)-1])/data$cpi[1:length(data$cpi)-1])
+data <- na.omit(data)
+datad <- read.table("economicDataDaily.txt", header = TRUE)
 ```
 
 # Abstract
+An economic shock is an event that causes a, generally sudden, change in the economy. Examples of shocks include the introduction of COVID-19, the deadly disease that has been spreading globally throughout 2020. This analysis seeks to examine the structure of the economy in such shock periods in comparison to non-shock periods. We will first identify shock periods using data then apply regression and time series modelling to analyze the differences in economic structure between periods identified as shocks and those not identified.
 
 
 # Introduction
 
-## Background (Lit Review?)
+## Background 
+
 
 ## Motivation
 
 ## Data Description
+
+For this analysis, we will be using data collected primarily through Federal Reserve Economic Data (FRED) and yahoo finance which will cover a range of common economic indicators and stock prices. The first set of variables creates our monthly dataset, i.e. data that is reported on a monthly basis, and consists of the unemployment rate, consumer confidence index, DOW Jones Composite (taken on the first of the month), oil price, federal funds rate (taken on the first of the month), and the inflation rate.
+We also consider a daily dataset, i.e. data reported for each day, which consists of the DOW Jones Composite, gold price, S&P 500, New York Stock Exchange, and 10 year bond rates. A more detailed explanation of these variables is in Appendix A.
 
 ## Research Questions
 
@@ -32,6 +48,95 @@ knitr::opts_chunk$set(echo = FALSE,message=FALSE,warning = FALSE)
 
 # Identifying and Defining Shock Periods
 
+We define shock periods as periods of large change, excluding change from the general trend, in the DOW Jones composite score, using this metric as our indicator for the economy as a whole. We will consider two potential periods for shock identification: by month and by day. Each of these analyses will also use the logarithm of the DOW instead of the DOW itself in order to have a general trend closer to linear, as discussed in the exploratory analysis. For the remainder of this section, any mention of the DOW score can be assumed to be referring to the logarithm of the DOW unless otherwise stated.
+
+## Shock Identification by Month
+
+Our first step in identifying shock periods is to exclude the natural trend using linear regression to model the DOW with time as the only predictor. The results of this step are shown in the below figure. 
+
+```{r regMonthly, fig.cap = "This figure shows the results of the linear fit to remove the general trend. While this fit would generally not be considered a good fit to the data, its purpose is only to remove a generic trend, which it effectively does."}
+reg <- lm(log(DOW_Close)~
+            poly(time(DATE),degree = 1,raw = T),data=data)
+# NONE OF THESE PLOTS ARE PROPERLY LABELLED YET AND THIS IS NOT KNITTING RIGHT!!!
+par(mar = c(4, 4, .1, .1))
+plot(log(data$DOW_Close))
+abline(reg, col = "red")
+plot(ymd(data$DATE), reg$residuals,ylab = "residuals", xlab = "Date")
+```
+
+Note that in the process of using a linear model and even fitting our line through linear regression, we are not intending to model our data in this step, but rather model, and then remove, only one small portion of the trend in the data. 
+
+Now that we have removed the general trend, we must consider the changes in the DOW, i.e. consider the changes between the residuals of our linear model. We will use a time series model in order to understand the trend in these changes. We will consider outliers, defined as having a residual of more than three standard deviations, where the standard deviation is calculated from the residuals themselves, from 0. A visualization of the residuals of the time series model and the cutoffs are shown below. 
+
+```{r, fig.cap = "This figure shows the model residuals. The red lines represent three standard deviations from 0. The seven points below the lower red line are the seven identified shocks."}
+# Difference between residuals
+res_temp <- reg$residuals[2:length(reg$residuals)] - reg$residuals[1:length(reg$residuals)-1]
+mod1 <- arima(res_temp,order = c(1,0,0))
+outliersmonsig <- which(abs(mod1$residuals) > 3*sqrt(var(mod1$residuals)))
+#outliers <- forecast::tsoutliers(mod1$residuals)$index
+#data$DATE[outliers+1]
+#data$DATE[which(abs(mod1$residuals)>3*sqrt(var(mod1$residuals)))]
+plot(ymd(data$DATE)[2:length(reg$residuals)], res_temp, ylab = "Change in residual", xlab = "Date")
+abline(h = -3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations below
+abline(h = 3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations above
+```
+
+We see that the analysis identifies seven points as shocks. In order to verify these points, we can trace them back to actual events. The dates of these seven shocks and their associated events are shown below. 
+
+```{r}
+A <- c("October 1987", "Black Monday stock market crash on October 19, 1987")
+B <- c("August 1990", "Beginning of the Gulf War (officially started August 2, 1990)")
+C <- c("August 1998", "Russian financial crisis")
+D <- c("September 2001", "9/11 terrorist attack")
+E <- c("October 2008", "Great Recession; TARP relief bill signed")
+G <- c("February 2009" , "Great Recession; congress passes large stimulus package")
+H <- c("March 2020", "First major reactions to COVID-19 pandemic begin in the US")
+
+varExplanations <- matrix(c(A, B,C,D,E,G,H), ncol = 2, byrow = TRUE)
+varExplanations <- as.data.frame(varExplanations)
+#varExplanations
+colnames(varExplanations) <- c("Time", "Event")
+knitr::kable(varExplanations, 
+             caption = "Associated events for each identified shock period",
+             align = c('c', rep('l', 2))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position")
+```
+
+## Shock Identification by Day
+
+In order to consider the shocks by daily data, we will use the same process as we used for the monthly data on its daily counterpart. The major difference will be the magnitude of data and the level of volatility in the data as daily data features much more noise than the monthly data. 
+
+Once again, we start by removing the general linear trend, as seen in the below figure.
+
+```{r regdaily, fig.cap = "This figure shows the results of the linear fit to remove the general trend. While this fit would generally not be considered a good fit to the data, its purpose is only to remove a generic trend, which it effectively does."}
+regd <- lm(log(DOW)~
+            poly(time(DATE),degree = 1,raw = T),data=datad)
+# NONE OF THESE PLOTS ARE PROPERLY LABELLED YET AND THIS IS NOT KNITTING RIGHT!!!
+par(mar = c(4, 4, .1, .1))
+plot(log(datad$DOW))
+abline(regd, col = "red")
+plot(ymd(datad$DATE), regd$residuals,ylab = "residuals", xlab = "Date")
+```
+
+Then, we consider the changes in these residuals between days and run a time series model on these changes, again looking for residuals that are further than three standard deviations from 0. 
+
+```{r, fig.cap = "This figure shows the model residuals. The red lines represent three standard deviations from 0. The shocks are the points that do not fall between the red lines. The blue lines show the periods that were considered shocks in the monthly analysis for reference."}
+# Difference between residuals
+res_tempd <- regd$residuals[2:length(regd$residuals)] - regd$residuals[1:length(regd$residuals)-1]
+mod1d <- arima(res_tempd,order = c(1,0,0))
+#outliers <- forecast::tsoutliers(mod1$residuals)$index
+#data$DATE[outliers+1]
+#data$DATE[which(abs(mod1$residuals)>3*sqrt(var(mod1$residuals)))]
+outliersmonsigd <- which(abs(mod1d$residuals) > 3*sqrt(var(mod1d$residuals)))
+plot(ymd(datad$DATE)[2:length(regd$residuals)], res_tempd, ylab = "Change in residual", xlab = "Date")
+abline(h = -3*sqrt(var(mod1d$residuals)), col = "red") # 3 standard deviations below
+abline(h = 3*sqrt(var(mod1d$residuals)), col = "red") # 3 standard deviations above
+abline(v = ymd(data$DATE[outliersmonsig]), col = "blue") #IDK if we should keep these
+abline(v = ymd(data$DATE[outliersmonsig+1]), col = "blue") #Also, check if this is doing what it is supposed to...
+```
+
+Compared to the monthly case, we see many more shock points. We see, however, that the points that we had previously identified as shocks do appear to some degree using this method as well with all seven cases having at least one shock day within the month and some cases like Black Monday showing up as distinct days.  
 
 # Modelling
 
@@ -47,6 +152,45 @@ knitr::opts_chunk$set(echo = FALSE,message=FALSE,warning = FALSE)
 
 # Works Cited
 
-# Appendices
+# Appendix A: Full Variable Description
+```{r}
+date <- c("DATE", "", "Date on which observations were taken; reported as the first of the month")
+dow <- c("DOW", "Dollars", "Gives the value of the DOW Jones Composite as of closing on the first of the month")
+unemployment <- c("unemployment", "", "US unemployment rate (unemployed/total people)")
+oil <- c("oil", "dollars/barrel", "Price of oil; based out of West Texas")
+gold <- c("gold", "dollers/ounce", "Price of gold as of the first of the month; based on London Bullion Market")
+cpi <- c("cpi", "relative to 1982-1984" , "Consumer price index; amount that 1 dollar is worth in 1982-1984 dollars")
+ffr <- c("ffr", "", "Federal Funds Rate  set by the Federal Reserve")
+cc <- c("consumer_confidence", "", "Consumer confidence using the University of Michigan Consumer Sentiment index with 1966 as the base year")
 
+varExplanations <- matrix(c(date, dow, unemployment, oil, gold, cpi, ffr, cc), ncol = 3, byrow = TRUE)
+varExplanations <- as.data.frame(varExplanations)
+#varExplanations
+colnames(varExplanations) <- c("Variable Name", "Unit", "Description")
+knitr::kable(varExplanations, 
+             caption = "Full description of all monthly variables",
+             align = c('c', rep('l', 2))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position")
+```
 
+```{r}
+date <- c("DATE", "", "Date on which observations were taken; reported as the first of the month")
+dow <- c("DOW", "dollars", "Value of the DOW Jones Composite as of closing on the particular day")
+nyse <- c("nyse", "dollars", "Value for the New York Stock Exchange on the particular day as of closing")
+bond <- c("bond10", "dollars", "10 year US bond prices")
+sp <- c("sp", "dollars", "Value of the S&P 500 Index")
+gold <- c("gold", "dollers/ounce", "Price of gold; based on London Bullion Market")
+
+varExplanations <- matrix(c(date, dow, nyse, bond, sp, gold), ncol = 3, byrow = TRUE)
+varExplanations <- as.data.frame(varExplanations)
+#varExplanations
+colnames(varExplanations) <- c("Variable Name", "Unit", "Description")
+knitr::kable(varExplanations, 
+             caption = "Full description of all daily variables",
+             align = c('c', rep('l', 2))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position")
+```
+
+May want to write in more on how the DOW, S&P, nyse, etc. are calculated and what each of these are relevant for
