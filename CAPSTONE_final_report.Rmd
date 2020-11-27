@@ -30,17 +30,39 @@ An economic shock is an event that causes a, generally sudden, change in the eco
 
 # Introduction
 
-## Background 
+## Background and Motivation
 
+The COVID-19 pandemic, which originated in Wuhan, China at the end of 2019 and has since spread globally, has largely impacted society on both social and economic levels. An analysis by Zekra identifies the largest economic impacts of the virus to be medical treatment costs, extensive use of limited medical resources that takes away from other health issues, economic disruption from social distancing and quarantining, decreases in tourism, and impacts on foreign investment. (Zekra) In this sense, the COVID-19 pandemic is but one example of an economic shock, which we will consider a period of rapid change incited by a particular event, which often causes rapid change in the economy.
 
-## Motivation
+When considering these shock periods, clearly there will be differences in some aspects of their impacts. For example, the shock caused by the 9/11 terrorist attacks would not feature major effects to the healthcare system nationally or restrictions imposed by social distancing. As Zeshan explores through simulation in relation to the COVID-19 shock, we can even see different industries be hit in different ways and with different magnitudes in particular shocks, thus adding a further level of complexity. (Zeshan) We would, however, still expect some similarities. For instance, in our prior example, both the pandemic and the 9/11 terrorist attacks would feature a decrease general outlook, which we will quantify through consumer confidence, and impacted the airline industry. 
+
+For this analysis, we will take a larger scale approach to exploring the effects of shocks on the economy. We will attempt to model economic structure as a whole using common metrics of economic performance as opposed to considering particular impacted industries like the approach from Zeshan. In particular, we will use regression and time series techniques to develop models representing the economy's structure in order to identify and analyze shock periods, in particular comparing relative to the effects of the COVID-19 shock.
+
+## Assumptions on Economic Structure
+
+In order to complete our analysis, we will assume the following structure for the economy as a whole...
+
+(THIS STILL NEEDS TO BE FINISHED, BUT I AM THINKING THIS WOULD BE A LOGICAL PLACE FOR THE STRUCTURE ASSUMPTIONS, I.E. TREND = LINEAR GENERAL + PERIODIC TS NATURAL FLUCTUATION + SHOCKS + RANDOM ERROR/NOISE)
+
 
 ## Data Description
 
 For this analysis, we will be using data collected primarily through Federal Reserve Economic Data (FRED) and yahoo finance which will cover a range of common economic indicators and stock prices. The first set of variables creates our monthly dataset, i.e. data that is reported on a monthly basis, and consists of the unemployment rate, consumer confidence index, DOW Jones Composite (taken on the first of the month), oil price, federal funds rate (taken on the first of the month), and the inflation rate.
-We also consider a daily dataset, i.e. data reported for each day, which consists of the DOW Jones Composite, gold price, S&P 500, New York Stock Exchange, and 10 year bond rates. A more detailed explanation of these variables is in Appendix A.
+We also consider a daily data set, i.e. data reported for each day, which consists of the DOW Jones Composite, gold price, S&P 500, New York Stock Exchange, and 10 year bond rates. A more detailed explanation of these variables is in Appendix A.
 
 ## Research Questions
+THIS ENTIRE SECTION NEEDS REVISED!!!!
+
+**Question 1:** How do shocks like COVID-19 effect the economy?
+
+**Question 2:** What are the differences and similarities for different shocks, in particular comparing COVID-19 to other shocks such as the Great Recession?
+
+## Statistical Research Questions
+
+**Question 1:** How does the structure of the economy, as defined by the effectiveness of models used to predict the DOW, differ for shock periods. In particular, do shock periods have higher magnitude residuals than non-shock periods? 
+
+**Question 2:** Are there significant differences between shocks in their ability to be fit to a model of economic structure and in the magnitude and nature of their effects? 
+
 
 
 # Exploratory Data Analysis
