@@ -20,6 +20,7 @@ library("factoextra")
 library(tidyr)
 data <- read.table("economicData.txt", header = TRUE)
 data$inflation <- c(NA, (data$cpi[2:length(data$cpi)] - data$cpi[1:length(data$cpi)-1])/data$cpi[1:length(data$cpi)-1])
+data <- data[,c("DATE", "DOW_Close", "unemployment", "oil", "gold", "federal_funds_rate", "consumer_confidence", "inflation")]
 data <- na.omit(data)
 datad <- read.table("economicDataDaily.txt", header = TRUE)
 ```
@@ -67,6 +68,32 @@ THIS ENTIRE SECTION NEEDS REVISED!!!!
 
 # Exploratory Data Analysis
 
+The main variable that we will consider as a response is the DOW, and as such, we want to get a better understanding of the DOW data. Looking at the raw DOW data, shown in the leftmost plot of Figure 1, we see that the shape is not linear, rather resembling a polynomial or exponential shape. In order to apply our theory of a linear general trend to the data, we will want to apply a transformation to the data; the log transform shown in the center plot of Figure 1 creates the more linear trend that we are aiming for. 
+
+```{r eda1, fig.cap="The above figure shows different methods of showing the DOW. Notice that the center plot is more linear than the leftmost, which justifies the log transform. For analysis, we will also consider the changes in DOW, represented in the rightmost plot.", fig.height=3}
+par(mfrow =c(1,3))
+plot(ymd(data$DATE), data$DOW_Close, ylab = "DOW", xlab = "Date", main = "DOW over Time")
+plot(ymd(data$DATE), log(data$DOW_Close), ylab = "log DOW", xlab = "Date", main = "Logarithm of \nDOW over Time")
+DowDiff <- log(data$DOW_Close)[2:length(data$DOW_Close)] - log(data$DOW_Close)[1:length(data$DOW_Close)-1]
+plot(ymd(data$DATE)[2:length(data$DOW_Close)], DowDiff, ylab = "log DOW Differences", xlab = "Date", main = "Logarithm of DOW \nDifferences over Time")
+```
+
+For our analysis, we will also want to consider the changes in the DOW, primarily for the sake of meeting the stationarity assumption. We see in the rightmost plot of Figure 1 that these values appear randomly around 0, meaning that we may not expect to find a significant trend over time. This is consistent with economic theory, which claims that we will not be able to predict these changes well. Keep in mind that even as we attempt to do so throughout this work, we will only be aiming to model the general structure with no predictive power. We do, however, see several points with larger changes, which we will analyze as we attempt to identify outliers.
+
+
+Figure 2 considers similar ideas for the daily DOW data. While the first two plots look very similar, the third really emphasizes the main difference between using monthly and daily data. The daily data has much more noise, which is partially a product of having much more data to work with. In the rightmost plot, we again see a lot of seemingly random variation around 0 but with a some periods with seemingly higher variation. 
+
+```{r eda2, fig.cap="The above figure shows different methods of showing the DOW using the daily data. Notice that the center plot is more linear than the leftmost, which justifies the log transform. For analysis, we will also consider the changes in DOW, represented in the rightmost plot.", fig.height=3}
+par(mfrow =c(1,3))
+plot(ymd(datad$DATE), datad$DOW, ylab = "DOW", xlab = "Date", main = "DOW over Time")
+plot(ymd(datad$DATE), log(datad$DOW), ylab = "log DOW", xlab = "Date", main = "Logarithm of \nDOW over Time")
+DowDiffd <- log(datad$DOW)[2:length(datad$DOW)] - log(datad$DOW)[1:length(datad$DOW)-1]
+plot(ymd(datad$DATE)[2:length(datad$DOW)], DowDiffd, ylab = "log DOW diff", xlab = "Date", main = "Logarithm of DOW \nDifferences over Time")
+```
+
+
+Of course, we also want to consider the explanatory variables and their relationship to the DOW. Further plots and analysis considering these variables can be found in Appendix B.
+
 
 # Identifying and Defining Shock Periods
 
@@ -76,11 +103,11 @@ We define shock periods as periods of large change, excluding change from the ge
 
 Our first step in identifying shock periods is to exclude the natural trend using linear regression to model the DOW with time as the only predictor. The results of this step are shown in the below figure. 
 
-```{r regMonthly, fig.cap = "This figure shows the results of the linear fit to remove the general trend. While this fit would generally not be considered a good fit to the data, its purpose is only to remove a generic trend, which it effectively does."}
+```{r regMonthly, fig.cap = "This figure shows the results of the linear fit to remove the general trend. While this fit would generally not be considered a good fit to the data, its purpose is only to remove a generic trend, which it effectively does.", fig.height=3}
 reg <- lm(log(DOW_Close)~
             poly(time(DATE),degree = 1,raw = T),data=data)
 # NONE OF THESE PLOTS ARE PROPERLY LABELLED YET AND THIS IS NOT KNITTING RIGHT!!!
-par(mar = c(4, 4, .1, .1))
+par(mfrow =c(1,2))
 plot(log(data$DOW_Close))
 abline(reg, col = "red")
 plot(ymd(data$DATE), reg$residuals,ylab = "residuals", xlab = "Date")
@@ -90,7 +117,7 @@ Note that in the process of using a linear model and even fitting our line throu
 
 Now that we have removed the general trend, we must consider the changes in the DOW, i.e. consider the changes between the residuals of our linear model. We will use a time series model in order to understand the trend in these changes. We will consider outliers, defined as having a residual of more than three standard deviations, where the standard deviation is calculated from the residuals themselves, from 0. A visualization of the residuals of the time series model and the cutoffs are shown below. 
 
-```{r, fig.cap = "This figure shows the model residuals. The red lines represent three standard deviations from 0. The seven points below the lower red line are the seven identified shocks."}
+```{r, fig.cap = "This figure shows the model residuals. The red lines represent three standard deviations from 0. The seven points below the lower red line are the seven identified shocks.", fig.height=3}
 # Difference between residuals
 res_temp <- reg$residuals[2:length(reg$residuals)] - reg$residuals[1:length(reg$residuals)-1]
 mod1 <- arima(res_temp,order = c(1,0,0))
@@ -131,11 +158,11 @@ In order to consider the shocks by daily data, we will use the same process as w
 
 Once again, we start by removing the general linear trend, as seen in the below figure.
 
-```{r regdaily, fig.cap = "This figure shows the results of the linear fit to remove the general trend. While this fit would generally not be considered a good fit to the data, its purpose is only to remove a generic trend, which it effectively does."}
+```{r regdaily, fig.cap = "This figure shows the results of the linear fit to remove the general trend. While this fit would generally not be considered a good fit to the data, its purpose is only to remove a generic trend, which it effectively does.", fig.height=3}
 regd <- lm(log(DOW)~
             poly(time(DATE),degree = 1,raw = T),data=datad)
 # NONE OF THESE PLOTS ARE PROPERLY LABELLED YET AND THIS IS NOT KNITTING RIGHT!!!
-par(mar = c(4, 4, .1, .1))
+par(mfrow =c(1,2))
 plot(log(datad$DOW))
 abline(regd, col = "red")
 plot(ymd(datad$DATE), regd$residuals,ylab = "residuals", xlab = "Date")
@@ -143,7 +170,7 @@ plot(ymd(datad$DATE), regd$residuals,ylab = "residuals", xlab = "Date")
 
 Then, we consider the changes in these residuals between days and run a time series model on these changes, again looking for residuals that are further than three standard deviations from 0. 
 
-```{r, fig.cap = "This figure shows the model residuals. The red lines represent three standard deviations from 0. The shocks are the points that do not fall between the red lines. The blue lines show the periods that were considered shocks in the monthly analysis for reference."}
+```{r, fig.cap = "This figure shows the model residuals. The red lines represent three standard deviations from 0. The shocks are the points that do not fall between the red lines. The blue lines show the periods that were considered shocks in the monthly analysis for reference.", fig.height=3}
 # Difference between residuals
 res_tempd <- regd$residuals[2:length(regd$residuals)] - regd$residuals[1:length(regd$residuals)-1]
 mod1d <- arima(res_tempd,order = c(1,0,0))
@@ -216,3 +243,42 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
 ```
 
 May want to write in more on how the DOW, S&P, nyse, etc. are calculated and what each of these are relevant for
+
+
+# Appendix B: Additional Plots and Exploratory Analysis
+
+```{r}
+par(mfrow =c(2,3))
+for(i in c(2:6)){
+  plot(ymd(data$DATE), data[,i], ylab = colnames(data)[i])
+  abline(v = ymd(data$DATE[outliersmonsig]), col = "blue") #IDK if we should keep these
+abline(v = ymd(data$DATE[outliersmonsig+1]), col = "blue") #Also, check if this is
+}
+
+```
+
+```{r}
+par(mfrow =c(2,2))
+for(i in c(3:6)){
+  plot <- ggplot(aes(x = data[,i], y = data$DOW_Close, color = ymd(data$DATE)), data = data) +
+    geom_point() +
+    xlab(colnames(data)[i])
+  print(plot)
+}
+```
+
+```{r}
+dataDiffs <- data
+for(col in 2:ncol(data)){
+  for(row in 2:nrow(data)){
+    dataDiffs[row, col] <- log(data[row, col]) - log(data[row-1, col])
+  }
+}
+par(mfrow =c(2,3))
+for(i in c(2:6)){
+  plot(ymd(dataDiffs$DATE), dataDiffs[,i], ylab = colnames(dataDiffs)[i], ylim = c(-1,1))
+  abline(v = ymd(dataDiffs$DATE[outliersmonsig]), col = "blue") #IDK if we should keep these
+abline(v = ymd(dataDiffs$DATE[outliersmonsig+1]), col = "blue") #Also, check if this is
+}
+
+```
