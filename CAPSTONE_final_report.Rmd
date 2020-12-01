@@ -7,11 +7,14 @@ output:
   pdf_document:
     toc: yes
     toc_depth: '2'
+header-includes: 
+- \usepackage{float}    
 ---
 \newpage
 ```{r setup, include=FALSE}
 rm(list = ls())
-knitr::opts_chunk$set(echo = FALSE,message=FALSE,warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE,message=FALSE,warning = FALSE, fig.pos = "H", out.extra = "")
+
 library(lubridate)
 library(ggplot2)
 library("tidyverse")
@@ -19,8 +22,10 @@ library("cluster")
 library("factoextra")
 library(tidyr)
 data <- read.table("economicData.txt", header = TRUE)
-data$inflation <- c(NA, (data$cpi[2:length(data$cpi)] - data$cpi[1:length(data$cpi)-1])/data$cpi[1:length(data$cpi)-1])
-data <- data[,c("DATE", "DOW_Close", "unemployment", "oil", "gold", "federal_funds_rate", "consumer_confidence", "inflation")]
+data$inflation <- c(NA, (data$cpi[2:length(data$cpi)] - data$cpi[1:length(data$cpi)-1])/
+                  data$cpi[1:length(data$cpi)-1])
+data <- data[,c("DATE", "DOW_Close", "unemployment", "oil", "gold",
+                "federal_funds_rate", "consumer_confidence", "inflation")]
 data <- na.omit(data)
 datad <- read.table("economicDataDaily.txt", header = TRUE)
 ```
@@ -41,10 +46,46 @@ For this analysis, we will take a larger scale approach to exploring the effects
 
 ## Assumptions on Economic Structure
 
-In order to complete our analysis, we will assume the following structure for the economy as a whole...
+In order to complete our analysis, we will be making a few assumptions on the economic structure as a whole. First, we will consider the DOW Jones Composite Average to be a reasonable metric for overall economic performance and thus will use this as our response variable in modelling. We consider the DOW Jones Composite Average a reasonable indicator of economic performance because it includes data from 65 major companies including ones from each of the major DOW sectors: industrial, utility, and transportation, thus giving a somewhat broad look at the economy overall. 
 
-(THIS STILL NEEDS TO BE FINISHED, BUT I AM THINKING THIS WOULD BE A LOGICAL PLACE FOR THE STRUCTURE ASSUMPTIONS, I.E. TREND = LINEAR GENERAL + PERIODIC TS NATURAL FLUCTUATION + SHOCKS + RANDOM ERROR/NOISE)
+We will also assume that economic trends as a whole, in our case being modelled by the DOW, can be split into three types: a general trend that can be modelled as a linear function, periodic fluctuations that can be modelled through time series, and shocks, which will show up as larger amounts of variation remaining after accounting for the first two, noting that we will still have to distinguish between random error and shocks at this stage. We will assume that shocks have a large enough impact to be distinguished from the random error in the data. An illustration of this structure is shown in the below figure.
 
+```{r tot, fig.cap="This figure illustrates the economic trends over time as described by our model. The black line represents the general trend with the red curve showing the natural fluctuations added to this general trend. The blue segments show two examples of shocks. Note that the shock around 1.4 is a negative shock and the one around 3.4 is a positive shock. The purple curve shows the sum of all of these components plus a small amount of noise, i.e. random error. Note that the units of the axis in this plot are arbitrary and that this plot was artificially generated with the sole intention of explaining the model.", fig.height=3}
+set.seed(470)
+curve(x + jitter(.5*sin(4*x), amount = .1) + (x < 3.45 & x > 3.3)*.5 + (x < 1.45 & x > 1.3)*-.5, 
+      col = "purple", xlim = c(0,4),xlab = "Time", ylab = "Economic Trend", 
+      main = "Economic Trends Over Time")
+curve(x + .5*sin(4*x) + (x < 3.45 & x > 3.3)*.5 + (x < 1.45 & x > 1.3)*-.5, col = "blue", add = TRUE)
+curve(1*x, add = TRUE)
+curve(x + .5*sin(4*x), add = TRUE, col = "red")
+```
+
+More formally, we can describe this structure as treating the economic structure as a three level model.
+
+
+The first level is the general trend, which is represented by a linear model on the DOW:
+\[
+Y_{ijk} = \beta_0 + \beta_1t + a_{ij} + \epsilon_{ijk} 
+\]
+where $\epsilon_{ijk}$ ~ $N(0, \sigma^2)$.
+
+
+The second level handles the natural fluctuations using a time series model:
+
+\[
+a_{ij} = \theta_1a_{ij-1} + u_{ij} + w_i
+\]
+
+where $u_{ij}$ ~ $N(0, \sigma_u^2)$.
+
+
+The third level then represents the shocks, which for the sake of the model will be assumed to all have the same magnitude, even though this is a rather strong simplification of reality that will be accounted for in the error terms in our model:
+
+\[
+w_i = w_0 + \beta_2v_i + k_i
+\]
+
+where $k_{i}$ ~ $N(0, \sigma_k^2)$ and $v_i$ is an indicator variable representing whether a period is a shock period.
 
 ## Data Description
 
@@ -52,30 +93,34 @@ For this analysis, we will be using data collected primarily through Federal Res
 We also consider a daily data set, i.e. data reported for each day, which consists of the DOW Jones Composite, gold price, S&P 500, New York Stock Exchange, and 10 year bond rates. A more detailed explanation of these variables is in Appendix A.
 
 ## Research Questions
-THIS ENTIRE SECTION NEEDS REVISED!!!!
 
-**Question 1:** How do shocks like COVID-19 effect the economy?
+**Question 1:** How do shock periods and non-shock periods differ in economic structure?
 
 **Question 2:** What are the differences and similarities for different shocks, in particular comparing COVID-19 to other shocks such as the Great Recession?
 
 ## Statistical Research Questions
 
-**Question 1:** How does the structure of the economy, as defined by the effectiveness of models used to predict the DOW, differ for shock periods. In particular, do shock periods have higher magnitude residuals than non-shock periods? 
+**Question 1:** How does the structure of the economy, as defined by the effectiveness of models used to predict the DOW, differ for shock periods? In particular, do shock periods have higher magnitude residuals than non-shock periods? 
 
-**Question 2:** Are there significant differences between shocks in their ability to be fit to a model of economic structure and in the magnitude and nature of their effects? 
+**Question 2:** Are there significant differences between shocks in their ability to be fit to a model of economic structure and in the magnitude and nature of their effects, as evidenced by their residuals in the fitted economic models? 
 
 
 
 # Exploratory Data Analysis
 
-The main variable that we will consider as a response is the DOW, and as such, we want to get a better understanding of the DOW data. Looking at the raw DOW data, shown in the leftmost plot of Figure 1, we see that the shape is not linear, rather resembling a polynomial or exponential shape. In order to apply our theory of a linear general trend to the data, we will want to apply a transformation to the data; the log transform shown in the center plot of Figure 1 creates the more linear trend that we are aiming for. Note that while the trend may appear mildly curved still, much of this slight curved appearance comes from the rapid growth in the 1990's that was caused by the introduction of the Internet, this is 
+The main variable that we will consider as a response is the DOW, and as such, we want to get a better understanding of the DOW data. Looking at the raw DOW data, shown in the leftmost plot of Figure 1, we see that the shape is not linear, rather resembling a polynomial or exponential shape. In order to apply our theory of a linear general trend to the data, we will want to apply a transformation to the data; the log transform shown in the center plot of Figure 1 creates the more linear trend that we are aiming for. Note that while the trend may appear mildly curved, much of this slight curved appearance comes from the rapid growth in the 1990's that was caused by the introduction of the Internet. Thus, this trend still reasonably falls under the assumptions of the model, though it does indicate that the introduction of the Internet may constitute an unindentified shock in our model.
 
 ```{r eda1, fig.cap="The above figure shows different methods of showing the DOW using the monthly data. Notice that the center plot is more linear than the leftmost, which justifies the log transform. For analysis, we will also consider the changes in DOW, represented in the rightmost plot.", fig.height=3}
 par(mfrow =c(1,3))
-plot(ymd(data$DATE), data$DOW_Close, ylab = "DOW", xlab = "Date", main = "DOW over Time")
-plot(ymd(data$DATE), log(data$DOW_Close), ylab = "log DOW", xlab = "Date", main = "Logarithm of \nDOW over Time")
-DowDiff <- log(data$DOW_Close)[2:length(data$DOW_Close)] - log(data$DOW_Close)[1:length(data$DOW_Close)-1]
-plot(ymd(data$DATE)[2:length(data$DOW_Close)], DowDiff, ylab = "log DOW Differences", xlab = "Date", main = "Logarithm of DOW \nDifferences over Time")
+plot(ymd(data$DATE), data$DOW_Close, ylab = "DOW", 
+     xlab = "Date", main = "DOW over Time")
+plot(ymd(data$DATE), log(data$DOW_Close), ylab = "log DOW", 
+     xlab = "Date", main = "Logarithm of \nDOW over Time")
+DowDiff <- log(data$DOW_Close)[2:length(data$DOW_Close)] -
+  log(data$DOW_Close)[1:length(data$DOW_Close)-1]
+plot(ymd(data$DATE)[2:length(data$DOW_Close)], DowDiff, ylab = "log DOW Differences",
+     xlab = "Date", 
+     main = "Logarithm of DOW \nDifferences over Time")
 ```
 
 For our analysis, we will also want to consider the changes in the DOW, primarily for the sake of meeting the stationarity assumption. We see in the rightmost plot of Figure 1 that these values appear randomly around 0, meaning that we may not expect to find a significant trend over time. This is consistent with economic theory, which claims that we will not be able to predict these changes well. Keep in mind that even as we attempt to do so throughout this work, we will only be aiming to model the general structure with no predictive power. We do, however, see several points with larger changes, which we will analyze as we attempt to identify outliers.
@@ -86,9 +131,11 @@ Figure 2 considers similar ideas for the daily DOW data. While the first two plo
 ```{r eda2, fig.cap="The above figure shows different methods of showing the DOW using the daily data. Notice that the center plot is more linear than the leftmost, which justifies the log transform. For analysis, we will also consider the changes in DOW, represented in the rightmost plot.", fig.height=3}
 par(mfrow =c(1,3))
 plot(ymd(datad$DATE), datad$DOW, ylab = "DOW", xlab = "Date", main = "DOW over Time")
-plot(ymd(datad$DATE), log(datad$DOW), ylab = "log DOW", xlab = "Date", main = "Logarithm of \nDOW over Time")
+plot(ymd(datad$DATE), log(datad$DOW), ylab = "log DOW", xlab = "Date", 
+     main = "Logarithm of \nDOW over Time")
 DowDiffd <- log(datad$DOW)[2:length(datad$DOW)] - log(datad$DOW)[1:length(datad$DOW)-1]
-plot(ymd(datad$DATE)[2:length(datad$DOW)], DowDiffd, ylab = "log DOW diff", xlab = "Date", main = "Logarithm of DOW \nDifferences over Time")
+plot(ymd(datad$DATE)[2:length(datad$DOW)], DowDiffd, ylab = "log DOW diff", 
+     xlab = "Date", main = "Logarithm of DOW \nDifferences over Time")
 ```
 
 
@@ -107,9 +154,13 @@ Our first step in identifying shock periods is to exclude the natural trend usin
 reg <- lm(log(DOW_Close)~
             poly(time(DATE),degree = 1,raw = T),data=data)
 par(mfrow =c(1,2))
-plot(ymd(data$DATE), log(data$DOW_Close), xlab = "Date", ylab = "log DOW", main = "Linear Trend of\n log DOW over Time")
-curve(6.131019  + 0.006492 * 12 * (year(as.Date(x, origin = "1981-01-01"))-1992) + 0.006492 *month(as.Date(x, origin = "1981-01-01")-1), col = "red", add = TRUE) # I have no idea why this line of code works...my guess is that you have to scale back by 12 to accommodate the multiplication but IDK why...
-plot(ymd(data$DATE), reg$residuals,ylab = "residuals", xlab = "Date", main = "Residuals from\nLinear Trend")
+plot(ymd(data$DATE), log(data$DOW_Close), xlab = "Date", ylab = "log DOW", 
+     main = "Linear Trend of\n log DOW over Time")
+curve(6.131019  + 0.006492 * 12 * (year(as.Date(x, origin = "1981-01-01"))-1992) + 
+        0.006492 *month(as.Date(x, origin = "1981-01-01")-1), 
+      col = "red", add = TRUE) # I have no idea why this line of code works...my guess is that you have to scale back by 12 to accommodate the multiplication but IDK why...
+plot(ymd(data$DATE), reg$residuals,ylab = "residuals", xlab = "Date", 
+     main = "Residuals from\nLinear Trend")
 ```
 
 Note that in the process of using a linear model and even fitting our line through linear regression, we are not intending to model our data in this step, but rather model, and then remove, only one small portion of the trend in the data. 
@@ -121,9 +172,6 @@ Now that we have removed the general trend, we must consider the changes in the 
 res_temp <- reg$residuals[2:length(reg$residuals)] - reg$residuals[1:length(reg$residuals)-1]
 mod1 <- arima(res_temp,order = c(1,0,0))
 outliersmonsig <- which(abs(mod1$residuals) > 3*sqrt(var(mod1$residuals)))
-#outliers <- forecast::tsoutliers(mod1$residuals)$index
-#data$DATE[outliers+1]
-#data$DATE[which(abs(mod1$residuals)>3*sqrt(var(mod1$residuals)))]
 plot(ymd(data$DATE)[2:length(reg$residuals)], res_temp, ylab = "Change in residual", xlab = "Date")
 abline(h = -3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations below
 abline(h = 3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations above
@@ -160,7 +208,6 @@ Once again, we start by removing the general linear trend, as seen in the below 
 ```{r regdaily, fig.cap = "This figure shows the results of the linear fit to remove the general trend. While this fit would generally not be considered a good fit to the data, its purpose is only to remove a generic trend, which it effectively does.", fig.height=3}
 regd <- lm(log(DOW)~
             poly(time(DATE),degree = 1,raw = T),data=datad)
-# NONE OF THESE PLOTS ARE PROPERLY LABELLED YET AND THIS IS NOT KNITTING RIGHT!!!
 par(mfrow =c(1,2))
 plot(log(datad$DOW))
 abline(regd, col = "red")
@@ -228,18 +275,25 @@ Zeshan, M. (2020). Double-hit scenario of Covid-19 and global value chains. *Env
 # Appendix A: Full Variable Description
 ```{r}
 date <- c("DATE", "", "Date on which observations were taken; reported as the first of the month")
-dow <- c("DOW", "Dollars", "Gives the value of the DOW Jones Composite as of closing on the first \nof the month")
-unemployment <- c("unemployment", "", "US unemployment rate (unemployed/total people)")
-oil <- c("oil", "dollars/barrel", "Price of oil; based out of West Texas")
-gold <- c("gold", "dollers/ounce", "Price of gold as of the first of the month; based on London Bullion Market")
-cpi <- c("cpi", "relative to 1982-1984" , "Consumer price index; amount that 1 dollar is worth in 1982-1984 dollars")
-ffr <- c("ffr", "", "Federal Funds Rate  set by the Federal Reserve")
-cc <- c("consumer_confidence", "", "Consumer confidence using the University of Michigan Consumer Sentiment 
+dow <- c("DOW", "Dollars", 
+         "Gives the value of the DOW Jones Composite as of closing on the first \nof the month")
+unemployment <- c("unemployment", "", 
+                  "US unemployment rate (unemployed/total people)")
+oil <- c("oil", "dollars/barrel",
+         "Price of oil; based out of West Texas")
+gold <- c("gold", "dollers/ounce",
+          "Price of gold as of the first of the month; based on London Bullion Market")
+cpi <- c("cpi", "relative to 1982-1984" , 
+         "Consumer price index; amount that 1 dollar is worth in 1982-1984 dollars")
+ffr <- c("ffr", "", 
+         "Federal Funds Rate set by the Federal Reserve")
+cc <- c("consumer_confidence", "",
+"Consumer confidence using the University of Michigan Consumer Sentiment 
         index with 1966 as the base year")
 
-varExplanations <- matrix(c(date, dow, unemployment, oil, gold, cpi, ffr, cc), ncol = 3, byrow = TRUE)
+varExplanations <- matrix(c(date, dow, unemployment, oil, gold, cpi, ffr, cc), 
+                          ncol = 3, byrow = TRUE)
 varExplanations <- as.data.frame(varExplanations)
-#varExplanations
 colnames(varExplanations) <- c("Variable Name", "Unit", "Description")
 knitr::kable(varExplanations, 
              caption = "Full description of all monthly variables",
@@ -253,14 +307,14 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
 ```{r}
 date <- c("DATE", "", "Date on which observations were taken; reported as the first of the month")
 dow <- c("DOW", "dollars", "Value of the DOW Jones Composite as of closing on the particular day")
-nyse <- c("nyse", "dollars", "Value for the New York Stock Exchange on the particular day as of closing")
+nyse <- c("nyse", "dollars", 
+          "Value for the New York Stock Exchange on the particular day as of closing")
 bond <- c("bond10", "dollars", "10 year US bond prices")
 sp <- c("sp", "dollars", "Value of the S&P 500 Index")
 gold <- c("gold", "dollers/ounce", "Price of gold; based on London Bullion Market")
 
 varExplanations <- matrix(c(date, dow, nyse, bond, sp, gold), ncol = 3, byrow = TRUE)
 varExplanations <- as.data.frame(varExplanations)
-#varExplanations
 colnames(varExplanations) <- c("Variable Name", "Unit", "Description")
 knitr::kable(varExplanations, 
              caption = "Full description of all daily variables",
@@ -274,12 +328,13 @@ May want to write in more on how the DOW, S&P, nyse, etc. are calculated and wha
 
 # Appendix B: Additional Plots and Exploratory Analysis
 
+## Monthly Data
 ```{r appb1, fig.cap="These plots show the monthly exploratory variables over time with the DOW also shown for reference. The blue vertical lines show the shock periods identified by the analysis. Notice that in the explanatory variables, the peaks and periods of larger change appear correlated with the movements of the DOW. Likewise, the shocks often appear in times where the explanatory variables are experiencing change."}
 par(mfrow =c(2,3))
 for(i in c(2:6)){
-  plot(ymd(data$DATE), data[,i], ylab = colnames(data)[i], xlab = 'Date', main = colnames(data)[i])
-  abline(v = ymd(data$DATE[outliersmonsig]), col = "blue") #IDK if we should keep these
-#abline(v = ymd(data$DATE[outliersmonsig+1]), col = "blue") #Also, check if this is
+  plot(ymd(data$DATE), data[,i], 
+       ylab = colnames(data)[i], xlab = 'Date', main = colnames(data)[i])
+  abline(v = ymd(data$DATE[outliersmonsig]), col = "blue") 
 }
 
 ```
@@ -289,39 +344,38 @@ dataLong <- pivot_longer(data, cols = 3:6, names_to = "Var", values_to = "Val")
 ggplot(aes(x = Val, y = (DOW_Close), color = ymd(DATE)), data = dataLong) +
      geom_point() +
   facet_wrap(facets = vars(Var),scales="free") + 
-  labs(color = "Date", y = "log DOW", x = "Explanatory Variables", title = "DOW vs. Explanatory Variables over Time")
-# for(i in c(3:6)){
-#   plot <- ggplot(aes(x = data[,i], y = data$DOW_Close, color = ymd(data$DATE)), data = data) +
-#     geom_point() +
-#     xlab(colnames(data)[i])
-#   print(plot)
-# }
+  labs(color = "Date", y = "log DOW", x = "Explanatory Variables", 
+       title = "DOW vs. Explanatory Variables over Time")
 ```
 
-```{r appb3, fig.cap="These plots show the monthly log changes in the explanatory variables with the DOW as reference. The blue lines show the shock periods. Notice how some variables, such as oil price, have large changes near several of the shock periods while others, such as gold prices, do not have any corresponding large residual points to correspond with the shocks. Also keep in mind that log differences act similarly to percentage change, and as such the seemingly large changes in the federal funds rate in the 2010s comes from the very small magnitude of the federal funds rate in that period combined with the fact that it is generally changed in increments of .25%. Also note that there are a few outliers excluded by the scales of these plots."}
+```{r appb3, fig.cap="These plots show the monthly log changes in the explanatory variables with the DOW as reference. The blue lines show the shock periods. Notice how some variables, such as oil price, have large changes near several of the shock periods while others, such as gold prices, do not have any corresponding large residual points to correspond with the shocks. Also keep in mind that log differences act similarly to percentage change, and as such the seemingly large changes in the federal funds rate in the 2010s comes from the very small magnitude of the federal funds rate in that period combined with the fact that it is generally changed in increments of .25%. "}
 dataDiffs <- data
 for(col in 2:ncol(data)){
   for(row in 2:nrow(data)){
     dataDiffs[row, col] <- log(data[row, col]) - log(data[row-1, col])
   }
 }
+dataDiffs <- dataDiffs[2:nrow(dataDiffs),]
 par(mfrow =c(2,3))
 for(i in c(2:6)){
-  plot(ymd(dataDiffs$DATE), dataDiffs[,i], ylab = colnames(dataDiffs)[i], ylim = c(-1,1), xlab = 'Date', main = colnames(data)[i])
-  abline(v = ymd(dataDiffs$DATE[outliersmonsig]), col = "blue") #IDK if we should keep these
-#abline(v = ymd(dataDiffs$DATE[outliersmonsig+1]), col = "blue") #Also, check if this is
+  plot(ymd(dataDiffs$DATE), dataDiffs[,i], ylab = colnames(dataDiffs)[i], 
+       xlab = 'Date', main = colnames(data)[i])
+  abline(v = ymd(dataDiffs$DATE[outliersmonsig]), col = "blue") 
 }
 
 ```
 
+From the monthly variables, we can see several patterns emerging between the different shock periods. For instance, the Great Recession and COVID-19 related shocks tend to have similar changes among the variables with larger magnitudes of changes relative to other variables. Exceptions to this trend include unemployment, which had a more gradual increase during the Great Recession compared to COVID-19 and gold prices, which were more of a gradual increase in COVID-19 relative to other shocks like the Great Recession shocks and the start of the Gulf War.
 
+## Daily Data
 
 ```{r appb4, fig.cap="These plots show the daily exploratory variables over time with the DOW also shown for reference. The blue vertical lines show the shock periods identified by the analysis. Notice that in the explanatory variables, the peaks and periods of larger change appear correlated with the movements of the DOW. Likewise, the shocks often appear in times where the explanatory variables are experiencing change."}
 par(mfrow =c(2,3))
 for(i in c(2:6)){
-  plot(ymd(datad$DATE), datad[,i], ylab = colnames(datad)[i], xlab = 'Date', main = colnames(datad)[i])
-  abline(v = ymd(data$DATE[outliersmonsig]), col = "blue") #IDK if we should keep these
-abline(v = ymd(data$DATE[outliersmonsig+1]), col = "blue") #Also, check if this is
+  plot(ymd(datad$DATE), datad[,i], ylab = colnames(datad)[i], xlab = 'Date', 
+       main = colnames(datad)[i])
+  abline(v = ymd(data$DATE[outliersmonsig]), col = "blue")
+abline(v = ymd(data$DATE[outliersmonsig+1]), col = "blue") 
 }
 
 ```
@@ -336,13 +390,8 @@ dataLongd <- pivot_longer(datad, cols = 3:6, names_to = "Var", values_to = "Val"
 ggplot(aes(x = Val, y = (DOW), color = ymd(DATE)), data = dataLongd) +
      geom_point() +
   facet_wrap(facets = vars(Var),scales="free") + 
-  labs(color = "Date", y = "log DOW", x = "Explanatory Variables", title = "DOW vs. Explanatory Variables over Time")
-# for(i in c(3:6)){
-#   plot <- ggplot(aes(x = data[,i], y = data$DOW_Close, color = ymd(data$DATE)), data = data) +
-#     geom_point() +
-#     xlab(colnames(data)[i])
-#   print(plot)
-# }
+  labs(color = "Date", y = "DOW", x = "Explanatory Variables", 
+       title = "DOW vs. Explanatory Variables over Time")
 ```
 
 
@@ -354,12 +403,18 @@ for(col in 2:ncol(datad)){
     dataDiffsd[row, col] <- log(datad[row, col]) - log(datad[row-1, col])
   }
 }
+dataDiffsd <- dataDiffsd[2:nrow(dataDiffsd),]
 par(mfrow =c(2,3))
 for(i in c(2:6)){
-  plot(ymd(dataDiffsd$DATE), dataDiffsd[,i], ylab = colnames(dataDiffsd)[i], ylim = c(-.5,.5), xlab = 'Date', main = colnames(datad)[i])
-  abline(v = ymd(dataDiffs$DATE[outliersmonsig]), col = "blue") #IDK if we should keep these
-#abline(v = ymd(dataDiffs$DATE[outliersmonsig+1]), col = "blue") #Also, check if this is
+  plot(ymd(dataDiffsd$DATE), dataDiffsd[,i], ylab = colnames(dataDiffsd)[i], 
+       xlab = 'Date', main = colnames(datad)[i])
+  abline(v = ymd(dataDiffs$DATE[outliersmonsig]), col = "blue") 
 }
-
 ```
 
+The similarity between the COVID-19 shock and the Great Recession shocks is even more clear in the daily data. These two periods nearly across the board have the most volatility of any of the periods, with the exception of Black Monday in some instances and COVID-19 gold prices, which were less volatile. To some extent, the shocks are all recognizable in the predictor variables, though some cases are more subtle than others, for example with the bond prices where the Gulf War has only a very small impact.
+
+# R Script
+```{r codeAppendix, ref.label = knitr::all_labels(), echo = TRUE, eval = FALSE}
+# Reprinted code chunks used previously for analysis
+```
