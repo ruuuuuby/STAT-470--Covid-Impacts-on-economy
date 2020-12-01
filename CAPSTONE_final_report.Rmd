@@ -200,16 +200,42 @@ Compared to the monthly case, we see many more shock points. We see, however, th
 
 # Works Cited
 
+Board of Governors of the Federal Reserve System (US), 10-Year Treasury Constant Maturity Rate [DGS10], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DGS10, November 30, 2020.
+
+Board of Governors of the Federal Reserve System (US), Effective Federal Funds Rate [DFF], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DFF, September 6, 2020.
+
+^DJA historical prices, DOW Jones Composite Average common stock. (n.d.). Retrieved September 6, 2020 from https://finance.yahoo.com/quote/%5EDJA/history?p=%5EDJA, September 6, 2020
+
+Federal Reserve Bank of St. Louis, Spot Crude Oil Price: West Texas Intermediate (WTI) [WTISPLC], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WTISPLC, September 6, 2020.
+
+^GSPC historical prices, S&P 500 common stock. (n.d.). Retrieved September 6, 2020 from https://finance.yahoo.com/quote/%5EGSPC?p=^GSPC&.tsrc=fin-srch, September 6, 2020
+
+ICE Benchmark Administration Limited (IBA), Gold Fixing Price 10:30 A.M. (London time) in London Bullion Market, based in U.S. Dollars [GOLDAMGBD228NLBM], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GOLDAMGBD228NLBM, September 6, 2020.
+
+^NYA historical prices, NYSE Composite (DJ) common stock. (n.d.). Retrieved September 6, 2020 from https://finance.yahoo.com/quote/%5ENYA?p=^NYA&.tsrc=fin-srch, September 6, 2020
+
+Surveys of Consumers, University of Michigan, University of Michigan: Consumer Sentiment [UMCSENT], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/UMCSENT, September 6, 2020.
+
+U.S. Bureau of Labor Statistics, Consumer Price Index for All Urban Consumers: All Items in U.S. City Average [CPIAUCSL], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CPIAUCSL, September 6, 2020.
+
+U.S. Bureau of Labor Statistics, Unemployment Rate [UNRATE], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/UNRATE, September 6, 2020.
+
+Zekra, L. (2020). COVID-19 Pandemic and Global Economic Impact. *Ovidius University Annals, Economic Sciences Series*, 0(1), 237-244. Retrieved September 22, 2020, from https://ideas.repec.org/a/ovi/oviste/vxxy2020i1p237-244.html This source breaks down the economic impacts of COVID-19. It discusses impacts from the disease itself as well as from measures taken to combat the disease. It also discusses individual industries, both those hurt and those helped by the pandemic.
+
+
+Zeshan, M. (2020). Double-hit scenario of Covid-19 and global value chains. *Environment, Development and Sustainability*. doi:10.1007/s10668-020-00982-w This article considers which sectors of the economy were most hit by COVID-19 and found that all sectors had at least mild impact with some larger than others.
+
 # Appendix A: Full Variable Description
 ```{r}
 date <- c("DATE", "", "Date on which observations were taken; reported as the first of the month")
-dow <- c("DOW", "Dollars", "Gives the value of the DOW Jones Composite as of closing on the first of the month")
+dow <- c("DOW", "Dollars", "Gives the value of the DOW Jones Composite as of closing on the first \nof the month")
 unemployment <- c("unemployment", "", "US unemployment rate (unemployed/total people)")
 oil <- c("oil", "dollars/barrel", "Price of oil; based out of West Texas")
 gold <- c("gold", "dollers/ounce", "Price of gold as of the first of the month; based on London Bullion Market")
 cpi <- c("cpi", "relative to 1982-1984" , "Consumer price index; amount that 1 dollar is worth in 1982-1984 dollars")
 ffr <- c("ffr", "", "Federal Funds Rate  set by the Federal Reserve")
-cc <- c("consumer_confidence", "", "Consumer confidence using the University of Michigan Consumer Sentiment index with 1966 as the base year")
+cc <- c("consumer_confidence", "", "Consumer confidence using the University of Michigan Consumer Sentiment 
+        index with 1966 as the base year")
 
 varExplanations <- matrix(c(date, dow, unemployment, oil, gold, cpi, ffr, cc), ncol = 3, byrow = TRUE)
 varExplanations <- as.data.frame(varExplanations)
@@ -219,7 +245,9 @@ knitr::kable(varExplanations,
              caption = "Full description of all monthly variables",
              align = c('c', rep('l', 2))) %>%
 kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position")
+                          font_size = 9, latex_options = "HOLD_position")%>%
+  kableExtra::column_spec(3, width = "30em")
+
 ```
 
 ```{r}
