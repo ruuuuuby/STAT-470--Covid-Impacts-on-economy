@@ -14,12 +14,12 @@ header-includes:
 ```{r setup, include=FALSE}
 rm(list = ls())
 knitr::opts_chunk$set(echo = FALSE,message=FALSE,warning = FALSE, fig.pos = "H", out.extra = "")
-
 library(lubridate)
 library(ggplot2)
 library("tidyverse")
 library("cluster")
 library("factoextra")
+library(stats)
 library(tidyr)
 data <- read.table("economicData.txt", header = TRUE)
 data$inflation <- c(NA, (data$cpi[2:length(data$cpi)] - data$cpi[1:length(data$cpi)-1])/
@@ -187,7 +187,6 @@ D <- c("September 2001", "9/11 terrorist attack")
 E <- c("October 2008", "Great Recession; TARP relief bill signed")
 G <- c("February 2009" , "Great Recession; congress passes large stimulus package")
 H <- c("March 2020", "First major reactions to COVID-19 pandemic begin in the US")
-
 varExplanations <- matrix(c(A, B,C,D,E,G,H), ncol = 2, byrow = TRUE)
 varExplanations <- as.data.frame(varExplanations)
 #varExplanations
@@ -235,9 +234,106 @@ Compared to the monthly case, we see many more shock points. We see, however, th
 
 # Modelling
 
+## Approach
+
+After identifying 7 shocks on both statistical and economic perspective, we want to examine these 7 shocks, comparing them with other regular periods by modelling the economic structure. As stated from the assumptions above, we assume economic structure is a linear combination of general trend, shocks, and fluctuations. Thus, our statistical approach to model economic structure is to use a linear model by considering time series effects, which are quantified by using cross correlation and then including correlated time periods. 
+
+After modelling the economic structure, we tend to compare shocks and non-shock periods by looking at their residuals. 
+
 ## Analysis on Monthly Data
 
+For the monthly data, we choose the response variable as *Dow_Close* value. We also choose 6 monthly reported economic predictors to measure the strucuture. Our goal is to examine how stock market (economy) will respond to changes in macrovarables. To normalize the data, we take log of the difference of all our variables except for inflation, which is equal to take the percent change of our values. More importantly, such transformation can satify our assumption of stationarity on response variable. 
+
+```{r}
+# Variable table INCOMPLETE
+variable<-data.frame(
+  No = c(1,2,3,4,5,6,7,8,9),
+  Variable=c("Dow_Close","unemployment","oil","gold","federal funds rate","consumer confidence index","inflation rate"),
+  Description = 
+    c(""), 
+  Units = c(''))
+knitr::kable(variable,
+             caption = "Variable Attributes",
+             align = c('c', rep('l', 7)),format="latex") %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 7, latex_options = "HOLD_position")
+```
+
+Firstly, check the figure of *Dow_Close* after transformation. 
+```{r}
+# transform all variables
+Dowm=as.ts(log(data$DOW_Close[2:474])-log(data$DOW_Close[1:473])) 
+unemploymentm=na.omit(as.ts(log(data$unemployment[2:474]) - log(data$unemployment[1:473])))
+oilm=na.omit(as.ts(log(data$oil[2:474]) - log(data$oil[1:473])))
+goldm=na.omit(as.ts(log(data$gold[2:474]) - log(data$gold[1:473])))
+ffrm=na.omit(as.ts(log(data$federal_funds_rate[2:474]) - log(data$federal_funds_rate[1:473])))
+ccim=na.omit(as.ts(log(data$consumer_confidence[2:474]) - log(data$consumer_confidence[1:473])))
+
+plot(ymd(data$DATE)[1:473],Dowm,xlab="Date",ylab="percent change of Dow_Close")
+```
+Then we will take the cross correlation between *Dow_Close* and 6 predictors. The goal of this step is to examine the effects of time series. All variables are not statistically independent since they all depend on time. One important feature for economic predictor is that current value might depend on previous values. Thus, before we examine the relationship among predictors in economic structure, we also want to consider the effects of the past. 
+
+Using cross correlation figures, we can easily check past significant lags that will influence current value of predictors. So that, we can include those lags into consideration. 
+
+From the cross correlation figures, we notice unemployment rate at lag -1 and -2, oil at lag -1, gold price at lag -1, inflation rate at -2,-3, federal funds rate at lag -2, and consumer confidence index at current lag and -1 are significant with current *Dow_Close* value. Thus, we need to consider them into the linear model. 
+
+```{r, fig.cap = "This figure shows cross correlation between Dow and 6 predictors.The x-axis is the lag, while before 0 represents past and after future. Future analysis is meaningless here since we will not do prediction. Lag that is higher than blue line means it is significant", fig.height=3}
+# cross correlation 
+par(mfrow=c(3,3))
+
+ccf(Dowm,unemploymentm)
+ccf(Dowm,oilm)
+ccf(Dowm,goldm)
+ccf(Dowm,data$inflation)
+ccf(Dowm,ffrm)
+ccf(Dowm,ccim)
+```
+
+```{r}
+# linear model 
+
+alldata=ts.intersect(Dowm,un1 =stats::lag(unemploymentm,-1),un2=stats::lag(unemploymentm,-2),
+                     oil1=stats::lag(oilm,-1), 
+                     gold=stats::lag(goldm,-1), 
+                     inf1=stats::lag(data$inflation,-2), inf2=stats::lag(data$inflation,-3),
+                     ffr2=stats::lag(ffrm,-2),
+                     cci=stats::lag(ccim,0),cci1=stats::lag(ccim,-1))
+
+modelccf=lm(Dowm~un1+un2+oil1+gold+inf1+inf2+ffr2+cci+cci1,data=alldata)
+summary(modelccf)
+
+plot(resid(modelccf))
+```
+
+INCOMPLETE: approach, plug in the shocks identified before and check how do their residuals look like
+
+
 ## Analysis on Daily Data
+
+For the monthly data, we still choose the response variable as *Dow_Close* value. We also choose 4 daily reported economic predictors to measure the strucuture. Our goal is to examine how stock market (economy) will respond to changes in macrovarables. To normalize the data, we take log of the difference of all our variables except for inflation, which is equal to take the percent change of our values. More importantly, such transformation can satify our assumption of stationarity on response variable. 
+
+```{r}
+# Variable table INCOMPLETE
+variable<-data.frame(
+  No = c(1,2,3,4,5),
+  Variable=c("Dow_Close","DGS10","SP500","gold","NYSE"),
+  Description = 
+    c(""), 
+  Units = c(''))
+knitr::kable(variable,
+             caption = "Variable Attributes",
+             align = c('c', rep('l', 7)),format="latex") %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 7, latex_options = "HOLD_position")
+```
+
+
+```{r}
+
+datadd=na.omit(datad)
+
+```
+
 
 
 # Discussion
@@ -290,7 +386,6 @@ ffr <- c("ffr", "",
 cc <- c("consumer_confidence", "",
 "Consumer confidence using the University of Michigan Consumer Sentiment 
         index with 1966 as the base year")
-
 varExplanations <- matrix(c(date, dow, unemployment, oil, gold, cpi, ffr, cc), 
                           ncol = 3, byrow = TRUE)
 varExplanations <- as.data.frame(varExplanations)
@@ -301,7 +396,6 @@ knitr::kable(varExplanations,
 kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
                           font_size = 9, latex_options = "HOLD_position")%>%
   kableExtra::column_spec(3, width = "30em")
-
 ```
 
 ```{r}
@@ -312,7 +406,6 @@ nyse <- c("nyse", "dollars",
 bond <- c("bond10", "dollars", "10 year US bond prices")
 sp <- c("sp", "dollars", "Value of the S&P 500 Index")
 gold <- c("gold", "dollers/ounce", "Price of gold; based on London Bullion Market")
-
 varExplanations <- matrix(c(date, dow, nyse, bond, sp, gold), ncol = 3, byrow = TRUE)
 varExplanations <- as.data.frame(varExplanations)
 colnames(varExplanations) <- c("Variable Name", "Unit", "Description")
@@ -336,7 +429,6 @@ for(i in c(2:6)){
        ylab = colnames(data)[i], xlab = 'Date', main = colnames(data)[i])
   abline(v = ymd(data$DATE[outliersmonsig]), col = "blue") 
 }
-
 ```
 
 ```{r appb2, fig.cap = "These plots show the DOW plotted by the explanatory variables over time. For the unemployment rate, we can see a negative relationship with the DOW, even as the magnitude of the DOW increases overtime. The remaining variables seem to have a stronger relationship with time, though in cases like the federal funds rate this can lead to apparent relationships with the DOW, in the case of the federal funds rate appearing to have a negative relationship and in the case of gold prices appearing as a positive relationship."}
@@ -362,7 +454,6 @@ for(i in c(2:6)){
        xlab = 'Date', main = colnames(data)[i])
   abline(v = ymd(dataDiffs$DATE[outliersmonsig]), col = "blue") 
 }
-
 ```
 
 From the monthly variables, we can see several patterns emerging between the different shock periods. For instance, the Great Recession and COVID-19 related shocks tend to have similar changes among the variables with larger magnitudes of changes relative to other variables. Exceptions to this trend include unemployment, which had a more gradual increase during the Great Recession compared to COVID-19 and gold prices, which were more of a gradual increase in COVID-19 relative to other shocks like the Great Recession shocks and the start of the Gulf War.
@@ -377,7 +468,6 @@ for(i in c(2:6)){
   abline(v = ymd(data$DATE[outliersmonsig]), col = "blue")
 abline(v = ymd(data$DATE[outliersmonsig+1]), col = "blue") 
 }
-
 ```
 
 
@@ -413,6 +503,9 @@ for(i in c(2:6)){
 ```
 
 The similarity between the COVID-19 shock and the Great Recession shocks is even more clear in the daily data. These two periods nearly across the board have the most volatility of any of the periods, with the exception of Black Monday in some instances and COVID-19 gold prices, which were less volatile. To some extent, the shocks are all recognizable in the predictor variables, though some cases are more subtle than others, for example with the bond prices where the Gulf War has only a very small impact.
+
+# Appendix C: Assumption checks for modelling economic structure
+
 
 # R Script
 ```{r codeAppendix, ref.label = knitr::all_labels(), echo = TRUE, eval = FALSE}
