@@ -246,17 +246,17 @@ For the monthly data, we choose the response variable as *Dow_Close* value. We a
 
 ```{r}
 # Variable table INCOMPLETE
-variable<-data.frame(
-  No = c(1,2,3,4,5,6,7,8,9),
-  Variable=c("Dow_Close","unemployment","oil","gold","federal funds rate","consumer confidence index","inflation rate"),
-  Description = 
-    c(""), 
-  Units = c(''))
-knitr::kable(variable,
-             caption = "Variable Attributes",
-             align = c('c', rep('l', 7)),format="latex") %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 7, latex_options = "HOLD_position")
+# variable<-data.frame(
+#   No = c(1,2,3,4,5,6,7,8,9),
+#   Variable=c("Dow_Close","unemployment","oil","gold","federal funds rate","consumer confidence index","inflation rate"),
+#   Description = 
+#     c(""), 
+#   Units = c(''))
+# knitr::kable(variable,
+#              caption = "Variable Attributes",
+#              align = c('c', rep('l', 7)),format="latex") %>%
+# kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+#                           font_size = 7, latex_options = "HOLD_position")
 ```
 
 Firstly, check the figure of *Dow_Close* after transformation. 
@@ -279,14 +279,14 @@ From the cross correlation figures, we notice unemployment rate at lag -1 and -2
 
 ```{r, fig.cap = "This figure shows cross correlation between Dow and 6 predictors.The x-axis is the lag, while before 0 represents past and after future. Future analysis is meaningless here since we will not do prediction. Lag that is higher than blue line means it is significant", fig.height=3}
 # cross correlation 
-par(mfrow=c(3,3))
-
-ccf(Dowm,unemploymentm)
-ccf(Dowm,oilm)
-ccf(Dowm,goldm)
-ccf(Dowm,data$inflation)
-ccf(Dowm,ffrm)
-ccf(Dowm,ccim)
+# par(mfrow=c(3,3))
+# 
+# ccf(Dowm,unemploymentm)
+# ccf(Dowm,oilm)
+# ccf(Dowm,goldm)
+# ccf(Dowm,data$inflation)
+# ccf(Dowm,ffrm)
+# ccf(Dowm,ccim)
 ```
 
 ```{r}
