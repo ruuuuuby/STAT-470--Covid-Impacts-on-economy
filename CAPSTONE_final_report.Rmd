@@ -280,7 +280,7 @@ From the cross correlation figures, we notice unemployment rate at lag -1 and -2
 ```{r, fig.cap = "This figure shows cross correlation between Dow and 6 predictors.The x-axis is the lag, while before 0 represents past and after future. Future analysis is meaningless here since we will not do prediction. Lag that is higher than blue line means it is significant", fig.height=3}
 
 # cross correlation 
-
+par(mfrow =c(2,3))
 
 ccf(Dowm,unemploymentm)
 ccf(Dowm,oilm)
@@ -312,7 +312,6 @@ points(ymd(data$DATE)[249],resid(modelccf)[245],col="red")
 points(ymd(data$DATE)[334],resid(modelccf)[330],col="red")
 points(ymd(data$DATE)[338],resid(modelccf)[334],col="red")
 points(ymd(data$DATE)[471],resid(modelccf)[467],col="red")
-
 
 ```
 
@@ -356,15 +355,19 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
 
 ```{r}
 # Transformation
-a=which(datad$DGS10==".")
-datad$DGS10[a]<-datad$DGS10[a-1]
-b=which(datad$gold==".")
-datad$gold[b]<-datad$gold[b-1]
-c=which(data$gold==".")
-datad$gold[c]<-datad$gold[c-1]
 
+datad <- read.table("economicDataDaily.txt", header = TRUE)
 datad$DGS10=as.numeric(datad$DGS10)
 datad$gold=as.numeric(datad$gold)
+
+a=which(is.na(datad$DGS10))
+datad$DGS10[a]<-datad$DGS10[a-1]
+b=which(is.na(datad$gold))
+datad$gold[b]<-datad$gold[b-1]
+c=which(is.na(datad$gold))
+datad$gold[c]<-datad$gold[c-1]
+
+
 
 Dowd=as.ts(log(datad$DOW[2:10011])-log(datad$DOW[1:10010])) 
 Dgsd=as.ts(log(datad$DGS10[2:10011])-log(datad$DGS10[1:10010])) 
@@ -375,21 +378,42 @@ nysed=as.ts(log(datad$NYSE[2:10011])-log(datad$NYSE[1:10010]))
 
 ```
 
-Similarily,we will do a cross correlation figure.
+Similarily,we will do a cross correlation figure. The lags shown are chosed to be within 20 days, since the goal is to analyze the data during shocks within a month, which is not covered by monthly data.
 
-```{r fig.height=3}
-#unknown error
+From the correlation figure, we can observe that *DOW_Close* is strongly positively correlated with DGS10, SP500, and NYSE. It might due to that all these three depend on stock market companies, while gold price depends on gold. We will consider the siginificant lags within 20 days and construct the model as in monthly data. 
 
+```{r,fig.cap = "This figure shows cross correlation between Dow and 4 daily predictors.The x-axis is the lag, while before 0 represents past and after future. Future analysis is meaningless here since we will not do prediction. Lag that is higher than blue line means it is significant", fig.height=3}
+par(mfrow =c(2,2))
 
-ccf(Dowd,Dgsd)
-ccf(Dowd,spd)
-#ccf(Dowd,goldd)
-ccf(Dowd,nysed)
+ccf(Dowd,Dgsd,ylim=range(-0.08,0.1),lag=20)
+ccf(Dowd,spd,ylim=range(-0.08,0.1),lag=20)
+ccf(Dowd,goldd,ylim=range(-0.08,0.1),lag=20)
+ccf(Dowd,nysed,ylim=range(-0.08,0.1),lag=20)
+
+```
+
+```{r, figure.cap='residuals of models, showing the real effects of shocks on percent change' ,fig.height=3}
+# linear model 
+alldatad=ts.intersect(Dowd,dgs0 =stats::lag(Dgsd,0),dgs1=stats::lag(Dgsd,-1),dgs3=stats::lag(Dgsd,-3),dgs7=stats::lag(Dgsd,-7),dgs9=stats::lag(Dgsd,-9),dgs15=stats::lag(Dgsd,-15),
+                     sp0=stats::lag(spd,0), sp1=stats::lag(spd,-1),sp4=stats::lag(spd,-4),sp6=stats::lag(spd,-6),sp8=stats::lag(spd,-8),sp9=stats::lag(spd,-9),sp12=stats::lag(spd,-12),sp15=stats::lag(spd,-15),sp16=stats::lag(spd,-16),sp18=stats::lag(spd,-18),
+                     gold=stats::lag(goldd,-2),  gold9=stats::lag(goldd,-9), 
+                     n=stats::lag(nysed,0),n1=stats::lag(nysed,-1),n4=stats::lag(nysed,-4),n6=stats::lag(nysed,-6),n12=stats::lag(nysed,-12),n15=stats::lag(nysed,-15),n16=stats::lag(nysed,-16),n18=stats::lag(nysed,-18))
+
+modelccfd=lm(Dowd~dgs0+dgs1+dgs3+dgs7+dgs9+dgs15+sp0+sp1+sp4+sp6+sp8+sp9+sp12+sp15+sp16+sp18+gold+gold9+n+n1+n4+n6+n12+n15+n16+n18,data=alldatad)
+summary(modelccfd)
+
+plot(ymd(datad$DATE[19:10010]),resid(modelccfd),xlab="Date",ylab="percent change of Dow_Close")
+points(ymd(datad$DATE)[1713:1734],resid(modelccfd)[1694:1715],col="red")
+points(ymd(datad$DATE)[2429:2451],resid(modelccfd)[2410:2432],col="red")
+points(ymd(datad$DATE)[4452:4472],resid(modelccfd)[4433:4453],col="red")
+points(ymd(datad$DATE)[5231:5245],resid(modelccfd)[5212:5226],col="red")
+points(ymd(datad$DATE)[7009:7031],resid(modelccfd)[6990:7012],col="red")
+points(ymd(datad$DATE)[7093:7111],resid(modelccfd)[7074:7092],col="red")
+points(ymd(datad$DATE)[9881:9902],resid(modelccfd)[9862:9883],col="red")
 
 
 
 ```
-
 
 # Discussion
 
