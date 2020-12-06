@@ -21,6 +21,7 @@ library("cluster")
 library("factoextra")
 library(stats)
 library(tidyr)
+set.seed(470)
 data <- read.table("economicData.txt", header = TRUE)
 data$inflation <- c(NA, (data$cpi[2:length(data$cpi)] - data$cpi[1:length(data$cpi)-1])/
                   data$cpi[1:length(data$cpi)-1])
@@ -423,6 +424,27 @@ nysed=as.ts(log(datad$NYSE[2:10011])-log(datad$NYSE[1:10010]))
 
 ```
 
+Again, we consider two major approaches, starting with the time series approach considering all variables then considering only the significant predictors to the model.
+
+### Modelling Approach 1: All Predictor Time Series Model
+```{r}
+regmodeld <- lm(Dowd ~ Dgsd + spd + goldd + nysed)
+outliersmonsigd <- which(abs(regmodeld$residuals) > 3*sqrt(var(regmodeld$residuals)))
+arimamodeld <- arima(residuals(regmodeld),order = c(1,0,0))
+```
+
+```{r, fig.cap="This plot show the ACF plot for the time series model applying to all of the monthly predictors. Notice that the only component with significant autocorrelation is at 0, which is implies that this data is meeting our assumptions."}
+acf(resid(arimamodeld))
+```
+
+```{r, fig.cap = "This figure shows the residuals of our first model."}
+plot(ymd(datad$DATE)[2:10011], resid(arimamodeld), ylab = "Residual", xlab = "Date")
+```
+
+
+
+### Modelling Approach 2: Subsetting Predictors
+
 Similarily,we will do a cross correlation figure. The lags shown are chosed to be within 20 days, since the goal is to analyze the data during shocks within a month, which is not covered by monthly data.
 
 From the correlation figure, we can observe that *DOW_Close* is strongly positively correlated with DGS10, SP500, and NYSE. It might due to that all these three depend on stock market companies, while gold price depends on gold. We will consider the siginificant lags within 20 days and construct the model as in monthly data. 
@@ -459,6 +481,10 @@ points(ymd(datad$DATE)[9881:9902],resid(modelccfd)[9862:9883],col="red")
 
 
 ```
+
+## Considering the Significance of the Shock Residual Magnitudes
+
+In order to test if the magnitudes of the residuals for shock periods are larger than for non-shock periods, we used permutation testing, the methods and results for which are given in much more detail in Appendix D. The results showed that the monthly analysis shows very strong evidence that the shocks have higher magnitude residuals in both models. The daily analysis also showed evidence that the shock periods, both those identified using the methods for daily analysis and for those identified using monthly analysis, have higher magnitude residuals, though not quite as strong of evidence compared to the monthly.
 
 # Discussion
 
@@ -548,8 +574,7 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
                           font_size = 9, latex_options = "HOLD_position")
 ```
 
-May want to write in more on how the DOW, S&P, nyse, etc. are calculated and what each of these are relevant for
-
+Note that the CPI variable can be transformed to monthly inflation by considering the percent change of the variable. The remaining variables are relatively common metrics of economic performance. Gold is generally considered a more safe investment in uncertain times, meaning that gold prices tend to rise as the economy worsens according to theory. Similarly, unemployment is expected to rise when the economy does poorly. In the opposite direction, we expect the federal funds rate to lower as the economy does poorly as the Federal Reserve will attempt to stimulate the economy, and we expect consumer confidence to likewise lower as the economy as a whole does worse. Other variables, like S&P 500 and the NYSE are expected to follow rather closely to the DOW as these are also more cumulative metrics of economic performance. Some variables, like inflation and oil prices, don't have as consistent of a relationship, though higher oil prices tend to be worse for the economy, and inflation is generally targeted around 2% annually. Lastly, 10 year bond prices act as a metric for beliefs about future interest rates, which will be related to interest and inflation rates.
 
 # Appendix B: Additional Plots and Exploratory Analysis
 
@@ -645,7 +670,7 @@ For each of our modelling approaches, we conducted a permutation test to test if
 
 To state this procedure more formally, we used permutation testing to test the hypothesis that the magnitude of the residuals for shock periods is greater than the residual magnitudes of the other points against the alternative that they are the same.
 
-```{r permtest1, fig.cap="This figure shows the sampling distribution generated for monthly model 1 through permutation testing. The red line shows the observed value. The value for all 10000 samples is less than the observed value, providing strong support that the shock residuals have greater magnitude than the other residuals."}
+```{r permtest1, fig.cap="This figure shows the sampling distribution generated for monthly model 1 through permutation testing. The red line shows the observed value. The value for all 10000 samples is less than the observed value, providing strong support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
 # Permutation testing model 1 monthly
 T0 <- abs(mean(resid(arimamodel)[outliersmonsig]) - mean(resid(arimamodel)[-outliersmonsig]))
 num_perm<-10000
@@ -657,7 +682,104 @@ for(i in 1:num_perm){
   }
 hist(T_perm, xlim = c(0,.16), main = "Samples Generated by Permutation Testing")
 abline(v=T0, col = "red")
+p1 <- mean(abs(T_perm)>=abs(T0))
 ```
+
+
+```{r permtest2, fig.cap="This figure shows the sampling distribution generated for monthly model 2 through permutation testing. The red line shows the observed value. The value for all but 3 of the 10000 samples is less than the observed value, i.e. the p value is .0003, providing strong support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
+# Permutation testing model 2 monthly
+T0 <- abs(mean(modelccf$residuals[outliersmonsig-4]) - mean(modelccf$residuals[-(outliersmonsig-4)]))
+num_perm<-10000
+nOutliers <- length(outliersmonsig-4)
+T_perm<-numeric(num_perm)
+for(i in 1:num_perm){
+  temp <- sample(modelccf$residuals)
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  }
+hist(T_perm, xlim = c(0,.16), main = "Samples Generated by Permutation Testing")
+abline(v=T0, col = "red")
+p2 <- mean(abs(T_perm)>=abs(T0))
+```
+
+```{r permtest3, fig.cap="This figure shows the sampling distribution generated for daily model 1 through permutation testing. The red line shows the observed value. The value for --- of the 10000 samples is less than the observed value, i.e. a p value of ---, providing support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
+# Permutation testing model 1 daily
+T0 <- abs(mean(resid(arimamodeld)[outliersmonsigd-19]) - mean(resid(arimamodel)[-outliersmonsigd-19]))
+num_perm<-10000
+nOutliers <- length(outliersmonsigd-19)
+T_perm<-numeric(num_perm)
+for(i in 1:num_perm){
+  temp <- sample(resid(arimamodeld))
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  }
+hist(T_perm, main = "Samples Generated by Permutation Testing")
+abline(v=T0, col = "red")
+p3 <- mean(abs(T_perm)>=abs(T0))
+```
+
+
+
+```{r permtest32, fig.cap="This figure shows the sampling distribution generated for daily model 1 through permutation testing. The red line shows the observed value. The value for --- of the 10000 samples is less than the observed value, i.e. a p value of ---, providing support that the shock residuals, using the same shocks as in the monthly data, have greater magnitude than the other residuals.", fig.height=3}
+# Permutation testing model 1 daily
+outd <- c(1694:1715, 2410:2432, 4433:4453, 5212:5226, 6990:7012, 7074:7092, 9862:9883)
+T0 <- abs(mean(resid(arimamodeld)[outd]) - mean(resid(arimamodeld)[-outd]))
+num_perm<-10000
+nOutliers <- length(outd)
+T_perm<-numeric(num_perm)
+for(i in 1:num_perm){
+  temp <- sample(resid(arimamodeld))
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  }
+hist(T_perm, main = "Samples Generated by Permutation Testing")
+abline(v=T0, col = "red")
+p4 <- mean(abs(T_perm)>=abs(T0))
+```
+
+
+```{r permtest4, fig.cap="This figure shows the sampling distribution generated for daily model 2 through permutation testing. The red line shows the observed value. The value for --- of the 10000 samples is less than the observed value, i.e. a p value of ---, providing support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
+# Permutation testing model 1 monthly
+T0 <- abs(mean(modelccfd$residuals[outliersmonsigd-19]) - mean(modelccfd$residuals[-(outliersmonsigd-19)]))
+num_perm<-10000
+nOutliers <- length(outliersmonsigd-19)
+T_perm<-numeric(num_perm)
+for(i in 1:num_perm){
+  temp <- sample(modelccfd$residuals)
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  }
+hist(T_perm, main = "Samples Generated by Permutation Testing")
+abline(v=T0, col = "red")
+p5 <- mean(abs(T_perm)>=abs(T0))
+```
+
+
+```{r permtest5, fig.cap="This figure shows the sampling distribution generated for daily model 2 through permutation testing. The red line shows the observed value. The value for --- of the 10000 samples is less than the observed value, i.e. a p value of ---, providing support that the shock residuals, using the same shocks as in the monthly data, have greater magnitude than the other residuals.", fig.height=3}
+# Permutation testing model 1 monthly
+outd <- c(1694:1715, 2410:2432, 4433:4453, 5212:5226, 6990:7012, 7074:7092, 9862:9883)
+T0 <- abs(mean(modelccfd$residuals[outd]) - mean(modelccfd$residuals[-(outd)]))
+num_perm<-10000
+nOutliers <- length(outd)
+T_perm<-numeric(num_perm)
+for(i in 1:num_perm){
+  temp <- sample(modelccfd$residuals)
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  }
+hist(T_perm, main = "Samples Generated by Permutation Testing")
+abline(v=T0, col = "red")
+p6 <- mean(abs(T_perm)>=abs(T0))
+```
+
+The below table summarizes the results from the above permutation tests. Lower p values indicate stronger support for the hypothesis that the shock periods have higher magnitude residuals than the other periods.
+
+```{r}
+ps <- c(p1, p2, p3, p4, p5, p6)
+df <- data.frame(`p Value` = ps)
+row.names(df) <- c("Monthly Model 1", "Monthly Model 2", "Daily Model 1 Using Daily Calculated Shocks", "Daily Model 1 Using Monthly Calculated Shocks", "Daily Model 2 Using Daily Calculated Shocks", "Daily Model 2 Using Monthly Calculated Shocks")
+knitr::kable(df, 
+             caption = "P values for each permutation test",
+             align = c('c', rep('l', 2))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position")
+```
+
 
 # R Script
 ```{r codeAppendix, ref.label = knitr::all_labels(), echo = TRUE, eval = FALSE}
