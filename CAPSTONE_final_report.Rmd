@@ -172,7 +172,7 @@ Now that we have removed the general trend, we must consider the changes in the 
 res_temp <- reg$residuals[2:length(reg$residuals)] - reg$residuals[1:length(reg$residuals)-1]
 mod1 <- arima(res_temp,order = c(1,0,0))
 outliersmonsig <- which(abs(mod1$residuals) > 3*sqrt(var(mod1$residuals)))
-plot(ymd(data$DATE)[2:length(reg$residuals)], res_temp, ylab = "Change in residual", xlab = "Date")
+plot(ymd(data$DATE)[2:length(reg$residuals)], res_temp, ylab = "Residual", xlab = "Date", main = "Residuals of Time Series Model")
 abline(h = -3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations below
 abline(h = 3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations above
 ```
@@ -208,9 +208,12 @@ Once again, we start by removing the general linear trend, as seen in the below 
 regd <- lm(log(DOW)~
             poly(time(DATE),degree = 1,raw = T),data=datad)
 par(mfrow =c(1,2))
-plot(log(datad$DOW))
-abline(regd, col = "red")
-plot(ymd(datad$DATE), regd$residuals,ylab = "residuals", xlab = "Date")
+plot(ymd(datad$DATE), log(datad$DOW), xlab = "Date", ylab = "log DOW", 
+     main = "Linear Trend of\n log DOW over Time")
+abline(lm(log(datad$DOW)~ymd(datad$DATE)), col = "red")
+#plot(log(datad$DOW))
+#abline(regd, col = "red")
+plot(ymd(datad$DATE), regd$residuals,ylab = "Residuals", xlab = "Date", main = "DOW over Time\n Residuals")
 ```
 
 Then, we consider the changes in these residuals between days and run a time series model on these changes, again looking for residuals that are further than three standard deviations from 0. 
@@ -223,7 +226,7 @@ mod1d <- arima(res_tempd,order = c(1,0,0))
 #data$DATE[outliers+1]
 #data$DATE[which(abs(mod1$residuals)>3*sqrt(var(mod1$residuals)))]
 outliersmonsigd <- which(abs(mod1d$residuals) > 3*sqrt(var(mod1d$residuals)))
-plot(ymd(datad$DATE)[2:length(regd$residuals)], res_tempd, ylab = "Change in residual", xlab = "Date")
+plot(ymd(datad$DATE)[2:length(regd$residuals)], res_tempd, ylab = "Change in residual", xlab = "Date", main = "Daily Residuals\nRelative to Shocks")
 abline(h = -3*sqrt(var(mod1d$residuals)), col = "red") # 3 standard deviations below
 abline(h = 3*sqrt(var(mod1d$residuals)), col = "red") # 3 standard deviations above
 abline(v = ymd(data$DATE[outliersmonsig]), col = "blue") #IDK if we should keep these
@@ -246,6 +249,7 @@ For the monthly data, we choose the response variable as *Dow_Close* value. We a
 
 ```{r}
 # Variable table INCOMPLETE
+
 # variable<-data.frame(
 #   No = c(1,2,3,4,5,6,7,8,9),
 #   Variable=c("Dow_Close","unemployment","oil","gold","federal funds rate","consumer confidence index","inflation rate"),
@@ -257,9 +261,22 @@ For the monthly data, we choose the response variable as *Dow_Close* value. We a
 #              align = c('c', rep('l', 7)),format="latex") %>%
 # kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
 #                           font_size = 7, latex_options = "HOLD_position")
+
+variable<-data.frame(
+  No = c(1,2,3,4,5,6,7),
+  Variable=c("Dow_Close","unemployment","oil","gold","federal funds rate","consumer confidence index","inflation rate"),
+  Description = 
+    c(""), 
+  Units = c(''))
+knitr::kable(variable,
+             caption = "Variable Attributes",
+             align = c('c', rep('l', 7)),format="latex") %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 7, latex_options = "HOLD_position")
+
 ```
 
-Firstly, check the figure of *Dow_Close* after transformation. 
+Firstly, check the figure of *Dow_Close* after transformation. The figure will be similar to *eda2* and it is stationary, satisfying the assumptions of time series model. 
 ```{r}
 # transform all variables
 Dowm=as.ts(log(data$DOW_Close[2:474])-log(data$DOW_Close[1:473])) 
@@ -269,7 +286,7 @@ goldm=na.omit(as.ts(log(data$gold[2:474]) - log(data$gold[1:473])))
 ffrm=na.omit(as.ts(log(data$federal_funds_rate[2:474]) - log(data$federal_funds_rate[1:473])))
 ccim=na.omit(as.ts(log(data$consumer_confidence[2:474]) - log(data$consumer_confidence[1:473])))
 
-plot(ymd(data$DATE)[1:473],Dowm,xlab="Date",ylab="percent change of Dow_Close")
+#plot(ymd(data$DATE)[1:473],Dowm,xlab="Date",ylab="percent change of Dow_Close")
 ```
 Then we will take the cross correlation between *Dow_Close* and 6 predictors. The goal of this step is to examine the effects of time series. All variables are not statistically independent since they all depend on time. One important feature for economic predictor is that current value might depend on previous values. Thus, before we examine the relationship among predictors in economic structure, we also want to consider the effects of the past. 
 
@@ -278,7 +295,9 @@ Using cross correlation figures, we can easily check past significant lags that 
 From the cross correlation figures, we notice unemployment rate at lag -1 and -2, oil at lag -1, gold price at lag -1, inflation rate at -2,-3, federal funds rate at lag -2, and consumer confidence index at current lag and -1 are significant with current *Dow_Close* value. Thus, we need to consider them into the linear model. 
 
 ```{r, fig.cap = "This figure shows cross correlation between Dow and 6 predictors.The x-axis is the lag, while before 0 represents past and after future. Future analysis is meaningless here since we will not do prediction. Lag that is higher than blue line means it is significant", fig.height=3}
+
 # cross correlation 
+
 # par(mfrow=c(3,3))
 # 
 # ccf(Dowm,unemploymentm)
@@ -287,9 +306,20 @@ From the cross correlation figures, we notice unemployment rate at lag -1 and -2
 # ccf(Dowm,data$inflation)
 # ccf(Dowm,ffrm)
 # ccf(Dowm,ccim)
+
+
+
+ccf(Dowm,unemploymentm)
+ccf(Dowm,oilm)
+ccf(Dowm,goldm)
+ccf(Dowm,data$inflation)
+ccf(Dowm,ffrm)
+ccf(Dowm,ccim)
+
 ```
 
-```{r}
+
+```{r, figure.cap='residuals of models, showing the real effects of shocks on percent change' ,fig.height=3}
 # linear model 
 
 alldata=ts.intersect(Dowm,un1 =stats::lag(unemploymentm,-1),un2=stats::lag(unemploymentm,-2),
@@ -302,15 +332,39 @@ alldata=ts.intersect(Dowm,un1 =stats::lag(unemploymentm,-1),un2=stats::lag(unemp
 modelccf=lm(Dowm~un1+un2+oil1+gold+inf1+inf2+ffr2+cci+cci1,data=alldata)
 summary(modelccf)
 
-plot(resid(modelccf))
+plot(ymd(data$DATE)[4:473],resid(modelccf),xlab="Date",ylab="percent change of Dow_Close")
+points(ymd(data$DATE)[82],resid(modelccf)[78],col="red")
+points(ymd(data$DATE)[116],resid(modelccf)[112],col="red")
+points(ymd(data$DATE)[212],resid(modelccf)[208],col="red")
+points(ymd(data$DATE)[249],resid(modelccf)[245],col="red")
+points(ymd(data$DATE)[334],resid(modelccf)[330],col="red")
+points(ymd(data$DATE)[338],resid(modelccf)[334],col="red")
+points(ymd(data$DATE)[471],resid(modelccf)[467],col="red")
+
+
 ```
 
-INCOMPLETE: approach, plug in the shocks identified before and check how do their residuals look like
+The resulting linear model shows that percent change of *Dow_Close* has positive relationship with oil price, gold price, current consumer confidence index, and past one period inflation rate. It also has negative relationship with past two periods federal funds rate. All make sense since increasing consumer confidence and inflation encourage investment on stock market and can boost economy. Decreasing federal funds rate means that the costs of borrowing decrease and can also boost economic transaction. 
+
+One interesting fact shown by the model is that for all predictors that have two past periods in the model, such as unemployment at lag-1 and unemployment at lag -2, they have opposite relationship with *Dow_Close*. They also make sense since economy itself has the ability to self adjust. And we consider closer period has major effect on current economy. 
+
+This model is our final model of economic structure, since when we analyze the residual, we notice that residuals follow independent, indentical structure, which satisfies the assumption of linear model. It also shows that all residuals left should be the effects of natural fluctuations and shocks. Thus, we can directly use residuals of this model to evaluate the differences of non-shock period and shock periods. 
+
+As a result from Shock Identification part, we notice 7 shocks in total. Red points are effects of these 7 shocks and we can see that nearly all shocks are negative shocks, which means that they create negative percentage change of Dow in the past. 
+
+Nearly all 7 shocks have above 10% decrease in *Dow_Close*. Otherwise, most non-shock periods remain in the fluctuations from 10% to -10%. Thus, we can assume that in a monthly period, a 10% fluctuation is normal in economy. While other factors intervene, a shock that create more than 10% fluctuation might happen. 
+
+Moreover, comparing among these 7 shocks, we notice that nearly all of them have a 10% decrease except for the shock of black Monday stock market crash on October, 1987. It had over 20% decrease. However, the reason is that only this shock has a direct impact on stock market. 
+
+The rightmost three red points are the covid shock and great recession. They caused similar effects and pattern and we can assume that covid has slightly worse impacts on economy than Great Recession. 
+
 
 
 ## Analysis on Daily Data
 
-For the monthly data, we still choose the response variable as *Dow_Close* value. We also choose 4 daily reported economic predictors to measure the strucuture. Our goal is to examine how stock market (economy) will respond to changes in macrovarables. To normalize the data, we take log of the difference of all our variables except for inflation, which is equal to take the percent change of our values. More importantly, such transformation can satify our assumption of stationarity on response variable. 
+Daily information is also important since some shocks might only create impacts in only few days, but not months. Thus, we want to analyze the daily information during these shocks. 
+
+We still choose the response variable as *Dow_Close* value, but we choose 4 new daily reported economic predictors to measure the structure. We will do similar approach on daily model and transform the data. Some data is missing since sometimes data such as during weekend will not being recorded. Thus, we replace missing data to previous day data.
 
 ```{r}
 # Variable table INCOMPLETE
@@ -329,16 +383,53 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
 
 
 ```{r}
+# Transformation
+a=which(datad$DGS10==".")
+datad$DGS10[a]<-datad$DGS10[a-1]
+b=which(datad$gold==".")
+datad$gold[b]<-datad$gold[b-1]
+c=which(data$gold==".")
+datad$gold[c]<-datad$gold[c-1]
 
-datadd=na.omit(datad)
+datad$DGS10=as.numeric(datad$DGS10)
+datad$gold=as.numeric(datad$gold)
+
+Dowd=as.ts(log(datad$DOW[2:10011])-log(datad$DOW[1:10010])) 
+Dgsd=as.ts(log(datad$DGS10[2:10011])-log(datad$DGS10[1:10010])) 
+spd=as.ts(log(datad$SP500[2:10011])-log(datad$SP500[1:10010])) 
+goldd=as.ts(log(datad$gold[2:10011])-log(datad$gold[1:10010])) 
+nysed=as.ts(log(datad$NYSE[2:10011])-log(datad$NYSE[1:10010])) 
+
+
+```
+
+Similarily,we will do a cross correlation figure.
+
+```{r fig.height=3}
+#unknown error
+
+
+ccf(Dowd,Dgsd)
+ccf(Dowd,spd)
+#ccf(Dowd,goldd)
+ccf(Dowd,nysed)
+
+
 
 ```
 
 
-
 # Discussion
 
+For the study, we use monthly and daily *DOW_Close* value to be our reponse variables. By the residuals of *DOW_Close* with time, we recognize 7 shocks in total. To anaalyze the real effects of these shocks, we run a model on both monthly and daily data using the assumptions of economic structure. 
+
+The result of monthly data shows that all shocks create 10% decrease in monthly *DOW_Close* values. Thus, we assume natrual fluctuations in a month occur in a range of 10%. Among the shocks, we recognize that almost all shocks created 10% decrease except for the Black Monday Stock Market Shock in October, 1987. The reason we assume is that this shock has direct impact on stock market. On the other hand, other shocks are stable on 10% decrease because economy and government have the ability to adjust the market. 
+
+
+
 # Limitations and Future Study
+
+One limitation in the study is the limitation on response variable. *DOW_Close* is the predictor on stock market, thus, the study might have bias that economy is concentrated on stock market. This is also the reason why shocks on stock moarket tend to have larger effects. Other and more comprehensive predictors should be considered in the future study. 
 
 
 # Works Cited
