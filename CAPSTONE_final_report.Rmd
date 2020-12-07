@@ -175,7 +175,8 @@ Now that we have removed the general trend, we must consider the changes in the 
 res_temp <- reg$residuals[2:length(reg$residuals)] - reg$residuals[1:length(reg$residuals)-1]
 mod1 <- arima(res_temp,order = c(1,0,0))
 outliersmonsig <- which(abs(mod1$residuals) > 3*sqrt(var(mod1$residuals)))
-plot(ymd(data$DATE)[2:length(reg$residuals)], res_temp, ylab = "Residual", xlab = "Date", main = "Residuals of Time Series Model")
+plot(ymd(data$DATE)[2:length(reg$residuals)], res_temp, ylab = "Residual", 
+     xlab = "Date", main = "Residuals of Time Series Model")
 abline(h = -3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations below
 abline(h = 3*sqrt(var(mod1$residuals)), col = "red") # 3 standard deviations above
 ```
@@ -214,7 +215,8 @@ par(mfrow =c(1,2))
 plot(ymd(datad$DATE), log(datad$DOW), xlab = "Date", ylab = "log DOW", 
      main = "Linear Trend of\n log DOW over Time")
 abline(lm(log(datad$DOW)~ymd(datad$DATE)), col = "red")
-plot(ymd(datad$DATE), regd$residuals,ylab = "Residuals", xlab = "Date", main = "DOW over Time\n Residuals")
+plot(ymd(datad$DATE), regd$residuals,ylab = "Residuals", xlab = "Date", 
+     main = "DOW over Time\n Residuals")
 ```
 
 Then, we consider the changes in these residuals between days and run a time series model on these changes, again looking for residuals that are further than three standard deviations from 0. 
@@ -223,15 +225,14 @@ Then, we consider the changes in these residuals between days and run a time ser
 # Difference between residuals
 res_tempd <- regd$residuals[2:length(regd$residuals)] - regd$residuals[1:length(regd$residuals)-1]
 mod1d <- arima(res_tempd,order = c(1,0,0))
-#outliers <- forecast::tsoutliers(mod1$residuals)$index
-#data$DATE[outliers+1]
-#data$DATE[which(abs(mod1$residuals)>3*sqrt(var(mod1$residuals)))]
+
 outliersmonsigd <- which(abs(mod1d$residuals) > 3*sqrt(var(mod1d$residuals)))
-plot(ymd(datad$DATE)[2:length(regd$residuals)], res_tempd, ylab = "Change in residual", xlab = "Date", main = "Daily Residuals\nRelative to Shocks")
+plot(ymd(datad$DATE)[2:length(regd$residuals)], res_tempd, ylab = "Change in residual", 
+     xlab = "Date", main = "Daily Residuals\nRelative to Shocks")
 abline(h = -3*sqrt(var(mod1d$residuals)), col = "red") # 3 standard deviations below
 abline(h = 3*sqrt(var(mod1d$residuals)), col = "red") # 3 standard deviations above
-abline(v = ymd(data$DATE[outliersmonsig]), col = "blue") #IDK if we should keep these
-abline(v = ymd(data$DATE[outliersmonsig+1]), col = "blue") #Also, check if this is doing what it is supposed to...
+abline(v = ymd(data$DATE[outliersmonsig]), col = "blue")
+abline(v = ymd(data$DATE[outliersmonsig+1]), col = "blue") 
 ```
 
 Compared to the monthly case, we see many more shock points. We see, however, that the points that we had previously identified as shocks do appear to some degree using this method as well with all seven cases having at least one shock day within the month and some cases like Black Monday showing up as distinct days.  
@@ -293,7 +294,8 @@ acf(resid(arimamodel))
 ```
 
 ```{r mod1residuals, fig.cap = "This figure shows the residuals of our first model, with the periods originally identified as shocks in red. Notice that the red points appear with a larger magnitude residual in this plot as they did in our shock identification plots."}
-plot(ymd(data$DATE)[2:474][-outliersmonsig], resid(arimamodel)[-outliersmonsig], ylab = "Residual", xlab = "Date", ylim = c(-.25, .2))
+plot(ymd(data$DATE)[2:474][-outliersmonsig], resid(arimamodel)[-outliersmonsig], 
+     ylab = "Residual", xlab = "Date", ylim = c(-.25, .2))
 points(ymd(data$DATE)[outliersmonsig], resid(arimamodel)[outliersmonsig], col = "red")
 ```
 
@@ -311,22 +313,7 @@ From the cross correlation figures, we notice unemployment rate at lag -1 and -2
 
 ```{r, fig.cap = "This figure shows cross correlation between Dow and 6 predictors.The x-axis is the lag, while before 0 represents past and after future. Future analysis is meaningless here since we will not do prediction. Lag that is higher than blue line means it is significant", fig.height=3}
 
-# cross correlation 
-
-
-# par(mfrow=c(3,3))
-# 
-# ccf(Dowm,unemploymentm)
-# ccf(Dowm,oilm)
-# ccf(Dowm,goldm)
-# ccf(Dowm,data$inflation)
-# ccf(Dowm,ffrm)
-# ccf(Dowm,ccim)
-
-
 par(mfrow =c(2,3))
-
-
 ccf(Dowm,unemploymentm)
 ccf(Dowm,oilm)
 ccf(Dowm,goldm)
@@ -461,12 +448,36 @@ ccf(Dowd,nysed,ylim=range(-0.08,0.1),lag=20)
 
 ```{r, figure.cap='residuals of models, showing the real effects of shocks on percent change' ,fig.height=3}
 # linear model 
-alldatad=ts.intersect(Dowd,dgs0 =stats::lag(Dgsd,0),dgs1=stats::lag(Dgsd,-1),dgs3=stats::lag(Dgsd,-3),dgs7=stats::lag(Dgsd,-7),dgs9=stats::lag(Dgsd,-9),dgs15=stats::lag(Dgsd,-15),
-                     sp0=stats::lag(spd,0), sp1=stats::lag(spd,-1),sp4=stats::lag(spd,-4),sp6=stats::lag(spd,-6),sp8=stats::lag(spd,-8),sp9=stats::lag(spd,-9),sp12=stats::lag(spd,-12),sp15=stats::lag(spd,-15),sp16=stats::lag(spd,-16),sp18=stats::lag(spd,-18),
-                     gold=stats::lag(goldd,-2),  gold9=stats::lag(goldd,-9), 
-                     n=stats::lag(nysed,0),n1=stats::lag(nysed,-1),n4=stats::lag(nysed,-4),n6=stats::lag(nysed,-6),n12=stats::lag(nysed,-12),n15=stats::lag(nysed,-15),n16=stats::lag(nysed,-16),n18=stats::lag(nysed,-18))
+alldatad=ts.intersect(Dowd,
+                      dgs0 =stats::lag(Dgsd,0),
+                      dgs1=stats::lag(Dgsd,-1),
+                      dgs3=stats::lag(Dgsd,-3),
+                      dgs7=stats::lag(Dgsd,-7),
+                      dgs9=stats::lag(Dgsd,-9),
+                      dgs15=stats::lag(Dgsd,-15),
+                      sp0=stats::lag(spd,0),
+                      sp1=stats::lag(spd,-1),
+                      sp4=stats::lag(spd,-4),
+                      sp6=stats::lag(spd,-6),
+                      sp8=stats::lag(spd,-8),
+                      sp9=stats::lag(spd,-9),
+                      sp12=stats::lag(spd,-12),
+                      sp15=stats::lag(spd,-15),
+                      sp16=stats::lag(spd,-16),
+                      sp18=stats::lag(spd,-18),
+                     gold=stats::lag(goldd,-2),  
+                     gold9=stats::lag(goldd,-9), 
+                     n=stats::lag(nysed,0),
+                     n1=stats::lag(nysed,-1),
+                     n4=stats::lag(nysed,-4),
+                     n6=stats::lag(nysed,-6),
+                     n12=stats::lag(nysed,-12),
+                     n15=stats::lag(nysed,-15),
+                     n16=stats::lag(nysed,-16),
+                     n18=stats::lag(nysed,-18))
 
-modelccfd=lm(Dowd~dgs0+dgs1+dgs3+dgs7+dgs9+dgs15+sp0+sp1+sp4+sp6+sp8+sp9+sp12+sp15+sp16+sp18+gold+gold9+n+n1+n4+n6+n12+n15+n16+n18,data=alldatad)
+modelccfd=lm(Dowd~dgs0+dgs1+dgs3+dgs7+dgs9+dgs15+sp0+sp1+sp4+sp6+sp8+sp9+sp12+
+               sp15+sp16+sp18+gold+gold9+n+n1+n4+n6+n12+n15+n16+n18,data=alldatad)
 summary(modelccfd)
 
 plot(ymd(datad$DATE[19:10010]),resid(modelccfd),xlab="Date",ylab="percent change of Dow_Close")
@@ -597,7 +608,7 @@ ggplot(aes(x = Val, y = (DOW_Close), color = ymd(DATE)), data = dataLong) +
        title = "DOW vs. Explanatory Variables over Time")
 ```
 
-```{r appb3, fig.cap="These plots show the monthly log changes in the explanatory variables with the DOW as reference. The blue lines show the shock periods. Notice how some variables, such as oil price, have large changes near several of the shock periods while others, such as gold prices, do not have any corresponding large residual points to correspond with the shocks. Also keep in mind that log differences act similarly to percentage change, and as such the seemingly large changes in the federal funds rate in the 2010s comes from the very small magnitude of the federal funds rate in that period combined with the fact that it is generally changed in increments of .25%. "}
+```{r appb3, fig.cap="These plots show the monthly log changes in the explanatory variables with the DOW as reference. The blue lines show the shock periods. Notice how some variables, such as oil price, have large changes near several of the shock periods while others, such as gold prices, do not have any corresponding large residual points to correspond with the shocks. Also keep in mind that log differences act similarly to percentage change, and as such the seemingly large changes in the federal funds rate in the 2010s comes from the very small magnitude of the federal funds rate in that period combined with the fact that it is generally changed in increments of .25. "}
 dataDiffs <- data
 for(col in 2:ncol(data)){
   for(row in 2:nrow(data)){
@@ -678,7 +689,8 @@ nOutliers <- length(outliersmonsig)
 T_perm<-numeric(num_perm)
 for(i in 1:num_perm){
   temp <- sample(resid(arimamodel))
-  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
+                     mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
 hist(T_perm, xlim = c(0,.16), main = "Samples Generated by Permutation Testing")
 abline(v=T0, col = "red")
@@ -688,13 +700,15 @@ p1 <- mean(abs(T_perm)>=abs(T0))
 
 ```{r permtest2, fig.cap="This figure shows the sampling distribution generated for monthly model 2 through permutation testing. The red line shows the observed value. The value for all but 3 of the 10000 samples is less than the observed value, i.e. the p value is .0003, providing strong support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
 # Permutation testing model 2 monthly
-T0 <- abs(mean(modelccf$residuals[outliersmonsig-4]) - mean(modelccf$residuals[-(outliersmonsig-4)]))
+T0 <- abs(mean(modelccf$residuals[outliersmonsig-4]) - 
+            mean(modelccf$residuals[-(outliersmonsig-4)]))
 num_perm<-10000
 nOutliers <- length(outliersmonsig-4)
 T_perm<-numeric(num_perm)
 for(i in 1:num_perm){
   temp <- sample(modelccf$residuals)
-  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
+                     mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
 hist(T_perm, xlim = c(0,.16), main = "Samples Generated by Permutation Testing")
 abline(v=T0, col = "red")
@@ -703,13 +717,15 @@ p2 <- mean(abs(T_perm)>=abs(T0))
 
 ```{r permtest3, fig.cap="This figure shows the sampling distribution generated for daily model 1 through permutation testing. The red line shows the observed value. The value for --- of the 10000 samples is less than the observed value, i.e. a p value of ---, providing support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
 # Permutation testing model 1 daily
-T0 <- abs(mean(resid(arimamodeld)[outliersmonsigd-19]) - mean(resid(arimamodel)[-outliersmonsigd-19]))
+T0 <- abs(mean(resid(arimamodeld)[outliersmonsigd-19]) - 
+            mean(resid(arimamodel)[-outliersmonsigd-19]))
 num_perm<-10000
 nOutliers <- length(outliersmonsigd-19)
 T_perm<-numeric(num_perm)
 for(i in 1:num_perm){
   temp <- sample(resid(arimamodeld))
-  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
+                     mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
 hist(T_perm, main = "Samples Generated by Permutation Testing")
 abline(v=T0, col = "red")
@@ -727,7 +743,8 @@ nOutliers <- length(outd)
 T_perm<-numeric(num_perm)
 for(i in 1:num_perm){
   temp <- sample(resid(arimamodeld))
-  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
+                     mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
 hist(T_perm, main = "Samples Generated by Permutation Testing")
 abline(v=T0, col = "red")
@@ -737,13 +754,15 @@ p4 <- mean(abs(T_perm)>=abs(T0))
 
 ```{r permtest4, fig.cap="This figure shows the sampling distribution generated for daily model 2 through permutation testing. The red line shows the observed value. The value for --- of the 10000 samples is less than the observed value, i.e. a p value of ---, providing support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
 # Permutation testing model 1 monthly
-T0 <- abs(mean(modelccfd$residuals[outliersmonsigd-19]) - mean(modelccfd$residuals[-(outliersmonsigd-19)]))
+T0 <- abs(mean(modelccfd$residuals[outliersmonsigd-19]) - 
+            mean(modelccfd$residuals[-(outliersmonsigd-19)]))
 num_perm<-10000
 nOutliers <- length(outliersmonsigd-19)
 T_perm<-numeric(num_perm)
 for(i in 1:num_perm){
   temp <- sample(modelccfd$residuals)
-  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
+                     mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
 hist(T_perm, main = "Samples Generated by Permutation Testing")
 abline(v=T0, col = "red")
@@ -760,7 +779,8 @@ nOutliers <- length(outd)
 T_perm<-numeric(num_perm)
 for(i in 1:num_perm){
   temp <- sample(modelccfd$residuals)
-  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - mean(temp[nOutliers+1:length(temp)], na.rm = T))
+  T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
+                     mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
 hist(T_perm, main = "Samples Generated by Permutation Testing")
 abline(v=T0, col = "red")
@@ -772,7 +792,12 @@ The below table summarizes the results from the above permutation tests. Lower p
 ```{r}
 ps <- c(p1, p2, p3, p4, p5, p6)
 df <- data.frame(`p Value` = ps)
-row.names(df) <- c("Monthly Model 1", "Monthly Model 2", "Daily Model 1 Using Daily Calculated Shocks", "Daily Model 1 Using Monthly Calculated Shocks", "Daily Model 2 Using Daily Calculated Shocks", "Daily Model 2 Using Monthly Calculated Shocks")
+row.names(df) <- c("Monthly Model 1", 
+                   "Monthly Model 2", 
+                   "Daily Model 1 Using Daily Calculated Shocks", 
+                   "Daily Model 1 Using Monthly Calculated Shocks", 
+                   "Daily Model 2 Using Daily Calculated Shocks", 
+                   "Daily Model 2 Using Monthly Calculated Shocks")
 knitr::kable(df, 
              caption = "P values for each permutation test",
              align = c('c', rep('l', 2))) %>%
