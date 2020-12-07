@@ -499,15 +499,21 @@ In order to test if the magnitudes of the residuals for shock periods are larger
 
 # Discussion
 
-For the study, we use monthly and daily *DOW_Close* value to be our reponse variables. By the residuals of *DOW_Close* with time, we recognize 7 shocks in total. To anaalyze the real effects of these shocks, we run a model on both monthly and daily data using the assumptions of economic structure. 
+For the study, we use monthly and daily *DOW_Close* value to be our response variables. By the residuals of *DOW_Close* with time, we recognize 7 shocks in total. To analyze the real effects of these shocks, we run a model on both monthly and daily data using the assumptions of economic structure. 
 
-The result of monthly data shows that all shocks create 10% decrease in monthly *DOW_Close* values. Thus, we assume natrual fluctuations in a month occur in a range of 10%. Among the shocks, we recognize that almost all shocks created 10% decrease except for the Black Monday Stock Market Shock in October, 1987. The reason we assume is that this shock has direct impact on stock market. On the other hand, other shocks are stable on 10% decrease because economy and government have the ability to adjust the market. 
+The result of monthly data shows that all shocks create 10% decrease in monthly *DOW_Close* values. Thus, we assume natural fluctuations in a month occur in a range of 10%. Among the shocks, we recognize that almost all shocks created 10% decrease except for the Black Monday Stock Market Shock in October, 1987. The reason we assume is that this shock has direct impact on stock market. On the other hand, other shocks are stable on 10% decrease because economy and government have the ability to adjust the market. 
+
+To bring this back to our research questions, our analysis suggests that shock periods do generally follow a different economic structure than other periods in the sense that they are not fit as well by our models as other points. In this sense, the shock points appeared to be similar in that they generally did not match the general trend in either of our models. However, the differences appeared in the magnitudes of these differences. For example, the COVID-19 shock often, both in the models and in the plots of the individual predictors, showed up as a more extreme shock than others. This is similar to the Black Monday shock in its severity, but keep in mind that Black Monday was centered around a very short time period compared to COVID's longer term effect. In this sense, COVID-19 shows similarity to the shocks in the Great Recession in that while only an individual shock point was detected, yet there are lingering effects nearby the identified shock, just not extreme enough to be considered a shock.
 
 
 
 # Limitations and Future Study
 
-One limitation in the study is the limitation on response variable. *DOW_Close* is the predictor on stock market, thus, the study might have bias that economy is concentrated on stock market. This is also the reason why shocks on stock moarket tend to have larger effects. Other and more comprehensive predictors should be considered in the future study. 
+One major limitation to our analysis is the set of implicit assumptions that we made. We considered the DOW as a metric for the economy, but this is not the only possible metric for economic performance. For example, we could have used real GDP, a variable excluded from this analysis due to its quarterly nature, as a metric nearly as easily as the DOW. Generalizing this point, we assumed that the relationships between our selected variables could properly capture the structure of the economy, which is introducing another assumption that may not fully accurately represent reality. As such, we would suggest that future studies consider not only other prominent metrics for economic structure but also other modelling structures in order to provide stronger evidence for the nature of the economic structure of shock periods.
+
+We also made assumptions on what is considered a shock. Our shock detection method identified only shocks with a rapid effect in a particular month, which excludes cases like the implementation of the Internet that was a shock to the economy but happened slightly more gradually. The identification was also entirely dependent on our data, so introducing other shock identification methods would be a good opportunity for further study.
+
+We also acknowledge that our models explained very little of the variation. However, this is to be expected as economic theory suggests that the changes in the DOW cannot be well predicted. In fact, our original goal was not to model the response variable but rather to use the model as a metric for economic structure.
 
 
 # Works Cited
@@ -692,7 +698,7 @@ for(i in 1:num_perm){
   T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
                      mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
-hist(T_perm, xlim = c(0,.16), main = "Samples Generated by Permutation Testing")
+hist(T_perm, xlim = c(0,.16), main = "Samples for Monthly Model 1")
 abline(v=T0, col = "red")
 p1 <- mean(abs(T_perm)>=abs(T0))
 ```
@@ -710,12 +716,12 @@ for(i in 1:num_perm){
   T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
                      mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
-hist(T_perm, xlim = c(0,.16), main = "Samples Generated by Permutation Testing")
+hist(T_perm, xlim = c(0,.16), main = "Samples for Monthly Model 2")
 abline(v=T0, col = "red")
 p2 <- mean(abs(T_perm)>=abs(T0))
 ```
 
-```{r permtest3, fig.cap="This figure shows the sampling distribution generated for daily model 1 through permutation testing. The red line shows the observed value. The value for --- of the 10000 samples is less than the observed value, i.e. a p value of ---, providing support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
+```{r permtest3, fig.cap="This figure shows the sampling distribution generated for daily model 1 through permutation testing. The red line shows the observed value. The value for 557 of the 10000 samples is less than the observed value, i.e. a p value of .0557, providing support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
 # Permutation testing model 1 daily
 T0 <- abs(mean(resid(arimamodeld)[outliersmonsigd-19]) - 
             mean(resid(arimamodel)[-outliersmonsigd-19]))
@@ -727,14 +733,14 @@ for(i in 1:num_perm){
   T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
                      mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
-hist(T_perm, main = "Samples Generated by Permutation Testing")
+hist(T_perm, main = "Samples for Daily Model 1\nUsing Daily-Generated Shocks")
 abline(v=T0, col = "red")
 p3 <- mean(abs(T_perm)>=abs(T0))
 ```
 
 
 
-```{r permtest32, fig.cap="This figure shows the sampling distribution generated for daily model 1 through permutation testing. The red line shows the observed value. The value for --- of the 10000 samples is less than the observed value, i.e. a p value of ---, providing support that the shock residuals, using the same shocks as in the monthly data, have greater magnitude than the other residuals.", fig.height=3}
+```{r permtest32, fig.cap="This figure shows the sampling distribution generated for daily model 1 through permutation testing. The red line shows the observed value. The value for 1100 of the 10000 samples is less than the observed value, i.e. a p value of .11, providing support that the shock residuals, using the same shocks as in the monthly data, have greater magnitude than the other residuals.", fig.height=3}
 # Permutation testing model 1 daily
 outd <- c(1694:1715, 2410:2432, 4433:4453, 5212:5226, 6990:7012, 7074:7092, 9862:9883)
 T0 <- abs(mean(resid(arimamodeld)[outd]) - mean(resid(arimamodeld)[-outd]))
@@ -746,14 +752,14 @@ for(i in 1:num_perm){
   T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
                      mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
-hist(T_perm, main = "Samples Generated by Permutation Testing")
+hist(T_perm, main = "Samples for Daily Model 1\nUsing Monthly-Generated Shocks")
 abline(v=T0, col = "red")
 p4 <- mean(abs(T_perm)>=abs(T0))
 ```
 
 
-```{r permtest4, fig.cap="This figure shows the sampling distribution generated for daily model 2 through permutation testing. The red line shows the observed value. The value for --- of the 10000 samples is less than the observed value, i.e. a p value of ---, providing support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
-# Permutation testing model 1 monthly
+```{r permtest4, fig.cap="This figure shows the sampling distribution generated for daily model 2 through permutation testing. The red line shows the observed value. The value for 469 of the 10000 samples is less than the observed value, i.e. a p value of .0469, providing support that the shock residuals have greater magnitude than the other residuals.", fig.height=3}
+# Permutation testing model 2 daily with daily shocks
 T0 <- abs(mean(modelccfd$residuals[outliersmonsigd-19]) - 
             mean(modelccfd$residuals[-(outliersmonsigd-19)]))
 num_perm<-10000
@@ -764,14 +770,14 @@ for(i in 1:num_perm){
   T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
                      mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
-hist(T_perm, main = "Samples Generated by Permutation Testing")
+hist(T_perm, main = "Samples for Daily Model 2\nUsing Daily-Generated Shocks")
 abline(v=T0, col = "red")
 p5 <- mean(abs(T_perm)>=abs(T0))
 ```
 
 
-```{r permtest5, fig.cap="This figure shows the sampling distribution generated for daily model 2 through permutation testing. The red line shows the observed value. The value for --- of the 10000 samples is less than the observed value, i.e. a p value of ---, providing support that the shock residuals, using the same shocks as in the monthly data, have greater magnitude than the other residuals.", fig.height=3}
-# Permutation testing model 1 monthly
+```{r permtest5, fig.cap="This figure shows the sampling distribution generated for daily model 2 through permutation testing. The red line shows the observed value. The value for 26 of the 10000 samples is less than the observed value, i.e. a p value of .0026, providing support that the shock residuals, using the same shocks as in the monthly data, have greater magnitude than the other residuals.", fig.height=3}
+# Permutation testing model 1 daily with monthly shocks
 outd <- c(1694:1715, 2410:2432, 4433:4453, 5212:5226, 6990:7012, 7074:7092, 9862:9883)
 T0 <- abs(mean(modelccfd$residuals[outd]) - mean(modelccfd$residuals[-(outd)]))
 num_perm<-10000
@@ -782,7 +788,7 @@ for(i in 1:num_perm){
   T_perm[i] <- abs(mean(temp[1:nOutliers], na.rm = T) - 
                      mean(temp[nOutliers+1:length(temp)], na.rm = T))
   }
-hist(T_perm, main = "Samples Generated by Permutation Testing")
+hist(T_perm, main = "Samples for Daily Model 2\nUsing Monthly-Generated Shocks")
 abline(v=T0, col = "red")
 p6 <- mean(abs(T_perm)>=abs(T0))
 ```
