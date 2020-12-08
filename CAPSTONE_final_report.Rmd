@@ -225,7 +225,6 @@ Then, we consider the changes in these residuals between days and run a time ser
 # Difference between residuals
 res_tempd <- regd$residuals[2:length(regd$residuals)] - regd$residuals[1:length(regd$residuals)-1]
 mod1d <- arima(res_tempd,order = c(1,0,0))
-
 outliersmonsigd <- which(abs(mod1d$residuals) > 3*sqrt(var(mod1d$residuals)))
 plot(ymd(datad$DATE)[2:length(regd$residuals)], res_tempd, ylab = "Change in residual", 
      xlab = "Date", main = "Daily Residuals\nRelative to Shocks")
@@ -271,7 +270,6 @@ For this approach, we will consider all of the predictors. Our first step will b
 
 ```{r}
 # EVERYTHING AS PERCENT CHANGE...well except for inflation because that already is a percent change
-
 # Make time series data and only pick time where all variables have values
 Dow=as.ts(log(data$DOW_Close[2:474])-log(data$DOW_Close[1:473])) 
 unemployment=na.omit(as.ts(log(data$unemployment[2:474]) - log(data$unemployment[1:473])))
@@ -280,17 +278,14 @@ gold=na.omit(as.ts(log(data$gold[2:474]) - log(data$gold[1:473])))
 cpi=na.omit(as.ts(data$inflation[2:474]))
 ffr=na.omit(as.ts(log(data$federal_funds_rate[2:474]) - log(data$federal_funds_rate[1:473])))
 cci=na.omit(as.ts(log(data$consumer_confidence[2:474]) - log(data$consumer_confidence[1:473])))
-
 # Mean structure modelling (General Trend)
 regmodel=lm(Dow~unemployment+oil+gold+cpi+ffr+cci)
-
 # AR(1)
 arimamodel <- arima(residuals(regmodel),order = c(1,0,0))
 ```
 
 ```{r mod1acf, fig.cap="This plot show the ACF plot for the time series model applying to all of the monthly predictors. Notice that the only component with significant autocorrelation is at 0, which is implies that this data is meeting our assumptions."}
 acf(resid(arimamodel))
-
 ```
 
 ```{r mod1residuals, fig.cap = "This figure shows the residuals of our first model, with the periods originally identified as shocks in red. Notice that the red points appear with a larger magnitude residual in this plot as they did in our shock identification plots."}
@@ -312,7 +307,6 @@ Using cross correlation figures, we can easily check past significant lags that 
 From the cross correlation figures, we notice unemployment rate at lag -1 and -2, oil at lag -1, gold price at lag -1, inflation rate at -2,-3, federal funds rate at lag -2, and consumer confidence index at current lag and -1 are significant with current *Dow_Close* value. Thus, we need to consider them into the linear model. 
 
 ```{r, fig.cap = "This figure shows cross correlation between Dow and 6 predictors.The x-axis is the lag, while before 0 represents past and after future. Future analysis is meaningless here since we will not do prediction. Lag that is higher than blue line means it is significant", fig.height=3}
-
 par(mfrow =c(2,3))
 ccf(Dowm,unemploymentm)
 ccf(Dowm,oilm)
@@ -320,23 +314,19 @@ ccf(Dowm,goldm)
 ccf(Dowm,data$inflation)
 ccf(Dowm,ffrm)
 ccf(Dowm,ccim)
-
 ```
 
 
 ```{r, figure.cap='residuals of models, showing the real effects of shocks on percent change' ,fig.height=3}
 # linear model 
-
 alldata=ts.intersect(Dowm,un1 =stats::lag(unemploymentm,-1),un2=stats::lag(unemploymentm,-2),
                      oil1=stats::lag(oilm,-1), 
                      gold=stats::lag(goldm,-1), 
                      inf1=stats::lag(data$inflation,-2), inf2=stats::lag(data$inflation,-3),
                      ffr2=stats::lag(ffrm,-2),
                      cci=stats::lag(ccim,0),cci1=stats::lag(ccim,-1))
-
 modelccf=lm(Dowm~un1+un2+oil1+gold+inf1+inf2+ffr2+cci+cci1,data=alldata)
-summary(modelccf)
-
+#summary(modelccf)
 plot(ymd(data$DATE)[4:473],resid(modelccf),xlab="Date",ylab="percent change of Dow_Close")
 points(ymd(data$DATE)[82],resid(modelccf)[78],col="red")
 points(ymd(data$DATE)[116],resid(modelccf)[112],col="red")
@@ -345,7 +335,6 @@ points(ymd(data$DATE)[249],resid(modelccf)[245],col="red")
 points(ymd(data$DATE)[334],resid(modelccf)[330],col="red")
 points(ymd(data$DATE)[338],resid(modelccf)[334],col="red")
 points(ymd(data$DATE)[471],resid(modelccf)[467],col="red")
-
 ```
 
 The resulting linear model shows that percent change of *Dow_Close* has positive relationship with oil price, gold price, current consumer confidence index, and past one period inflation rate. It also has negative relationship with past two periods federal funds rate. All make sense since increasing consumer confidence and inflation encourage investment on stock market and can boost economy. Decreasing federal funds rate means that the costs of borrowing decrease and can also boost economic transaction. 
@@ -370,45 +359,24 @@ Daily information is also important since some shocks might only create impacts 
 
 We still choose the response variable as *Dow_Close* value, but we choose 4 new daily reported economic predictors to measure the structure. We will do similar approach on daily model and transform the data. Some data is missing since sometimes data such as during weekend will not being recorded. Thus, we replace missing data to previous day data.
 
-```{r}
-# Variable table INCOMPLETE
-variable<-data.frame(
-  No = c(1,2,3,4,5),
-  Variable=c("Dow_Close","DGS10","SP500","gold","NYSE"),
-  Description = 
-    c(""), 
-  Units = c(''))
-knitr::kable(variable,
-             caption = "Variable Attributes",
-             align = c('c', rep('l', 7)),format="latex") %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 7, latex_options = "HOLD_position")
-```
 
 
 ```{r}
 # Transformation
-
 datad <- read.table("economicDataDaily.txt", header = TRUE)
 datad$DGS10=as.numeric(datad$DGS10)
 datad$gold=as.numeric(datad$gold)
-
 a=which(is.na(datad$DGS10))
 datad$DGS10[a]<-datad$DGS10[a-1]
 b=which(is.na(datad$gold))
 datad$gold[b]<-datad$gold[b-1]
 c=which(is.na(datad$gold))
 datad$gold[c]<-datad$gold[c-1]
-
-
-
 Dowd=as.ts(log(datad$DOW[2:10011])-log(datad$DOW[1:10010])) 
 Dgsd=as.ts(log(datad$DGS10[2:10011])-log(datad$DGS10[1:10010])) 
 spd=as.ts(log(datad$SP500[2:10011])-log(datad$SP500[1:10010])) 
 goldd=as.ts(log(datad$gold[2:10011])-log(datad$gold[1:10010])) 
 nysed=as.ts(log(datad$NYSE[2:10011])-log(datad$NYSE[1:10010])) 
-
-
 ```
 
 Again, we consider two major approaches, starting with the time series approach considering all variables then considering only the significant predictors to the model.
@@ -436,14 +404,13 @@ Similarily,we will do a cross correlation figure. The lags shown are chosed to b
 
 From the correlation figure, we can observe that *DOW_Close* is strongly positively correlated with DGS10, SP500, and NYSE. It might due to that all these three depend on stock market companies, while gold price depends on gold. We will consider the siginificant lags within 20 days and construct the model as in monthly data. 
 
-```{r,fig.cap = "This figure shows cross correlation between Dow and 4 daily predictors.The x-axis is the lag, while before 0 represents past and after future. Future analysis is meaningless here since we will not do prediction. Lag that is higher than blue line means it is significant", fig.height=3}
+```{r,fig.cap = "This figure shows cross correlation between Dow and 4 daily predictors.The x-axis is the lag, while before 0 represents past and after future. Future analysis is meaningless here since we will not do prediction. Lag that is higher than blue line means it is significant"}
 
-#par(mfrow =c(2,2))
+par(mfrow =c(2,2))
 ccf(Dowd,Dgsd,ylim=range(-0.08,0.1),lag=20)
 ccf(Dowd,spd,ylim=range(-0.08,0.1),lag=20)
 ccf(Dowd,goldd,ylim=range(-0.08,0.1),lag=20)
 ccf(Dowd,nysed,ylim=range(-0.08,0.1),lag=20)
-
 ```
 
 ```{r, figure.cap='residuals of models, showing the real effects of shocks on percent change' ,fig.height=3}
@@ -475,23 +442,21 @@ alldatad=ts.intersect(Dowd,
                      n15=stats::lag(nysed,-15),
                      n16=stats::lag(nysed,-16),
                      n18=stats::lag(nysed,-18))
-
 modelccfd=lm(Dowd~dgs0+dgs1+dgs3+dgs7+dgs9+dgs15+sp0+sp1+sp4+sp6+sp8+sp9+sp12+
                sp15+sp16+sp18+gold+gold9+n+n1+n4+n6+n12+n15+n16+n18,data=alldatad)
-summary(modelccfd)
-
+#summary(modelccfd)
 plot(ymd(datad$DATE[19:10010]),resid(modelccfd),xlab="Date",ylab="percent change of Dow_Close")
-points(ymd(datad$DATE)[1713:1734],resid(modelccfd)[1694:1715],col="red")
-points(ymd(datad$DATE)[2429:2451],resid(modelccfd)[2410:2432],col="red")
-points(ymd(datad$DATE)[4452:4472],resid(modelccfd)[4433:4453],col="red")
-points(ymd(datad$DATE)[5231:5245],resid(modelccfd)[5212:5226],col="red")
-points(ymd(datad$DATE)[7009:7031],resid(modelccfd)[6990:7012],col="red")
-points(ymd(datad$DATE)[7093:7111],resid(modelccfd)[7074:7092],col="red")
-points(ymd(datad$DATE)[9881:9902],resid(modelccfd)[9862:9883],col="red")
-
-
-
+points(ymd(datad$DATE)[1713:1734],resid(modelccfd)[1695:1716],col="red")
+points(ymd(datad$DATE)[2429:2451],resid(modelccfd)[2411:2433],col="red")
+points(ymd(datad$DATE)[4452:4472],resid(modelccfd)[4434:4454],col="red")
+points(ymd(datad$DATE)[5231:5245],resid(modelccfd)[5213:5227],col="red")
+points(ymd(datad$DATE)[7009:7031],resid(modelccfd)[6991:7013],col="red")
+points(ymd(datad$DATE)[7093:7111],resid(modelccfd)[7075:7093],col="red")
+points(ymd(datad$DATE)[9881:9902],resid(modelccfd)[9863:9884],col="red")
 ```
+Using the daily data to analyze on specific shocks we have identified before, we noticed that the shocks would usually last over a month. The 1987 and 1990 shocks seemed to last for one month, while other shocks, specifically between 1998 and 2001 had some longstanding effects that the economy were declining during 1998 and 2001 since most changes were negative. Also, a similar pattern showed up after 2001. However, the current month Dow changes were still pretty stable. One explanation is that even if there is a shock, people need more than one days to react the shocks. 
+
+Also, we checked the pattern of 2009 Great recession and observe that it has the most variation. Thus, during this period, people seemed to face stronger shocks. A similar pattern showed up for March coronavirus shock that it has largest range among the shocks. It can be effects of both financialling stimulation by government and pandemic. 
 
 ## Considering the Significance of the Shock Residual Magnitudes
 
@@ -501,7 +466,7 @@ In order to test if the magnitudes of the residuals for shock periods are larger
 
 For the study, we use monthly and daily *DOW_Close* value to be our response variables. By the residuals of *DOW_Close* with time, we recognize 7 shocks in total. To analyze the real effects of these shocks, we run a model on both monthly and daily data using the assumptions of economic structure. 
 
-The result of monthly data shows that all shocks create 10% decrease in monthly *DOW_Close* values. Thus, we assume natural fluctuations in a month occur in a range of 10%. Among the shocks, we recognize that almost all shocks created 10% decrease except for the Black Monday Stock Market Shock in October, 1987. The reason we assume is that this shock has direct impact on stock market. On the other hand, other shocks are stable on 10% decrease because economy and government have the ability to adjust the market. 
+The result of monthly data shows that all shocks create 10% decrease in monthly *DOW_Close* values. Thus, we assume natural fluctuations in a month occur in a range of 10%. Among the shocks, we recognize that almost all shocks created 10% decrease except for the Black Monday Stock Market Shock in October, 1987. The reason we assume is that this shock has direct impact on stock market. On the other hand, other shocks are stable on 10% decrease because economy and government have the ability to adjust the market. On the other hand, from the daily data, we notice that nearly all shocks have effects over one month. The typical indicator of a shock is a percent change rate of 2% decrease. Shocks period didn't show many differences compared to non-shock periods since people need time to react after shocks. So the differences were significant usually after some days of the shocks. Also, compared to different shocks, we observe that shocks between 1998 and 2001 had long-lasting effects, while covid shock has large fluctuations. 
 
 To bring this back to our research questions, our analysis suggests that shock periods do generally follow a different economic structure than other periods in the sense that they are not fit as well by our models as other points. In this sense, the shock points appeared to be similar in that they generally did not match the general trend in either of our models. However, the differences appeared in the magnitudes of these differences. For example, the COVID-19 shock often, both in the models and in the plots of the individual predictors, showed up as a more extreme shock than others. This is similar to the Black Monday shock in its severity, but keep in mind that Black Monday was centered around a very short time period compared to COVID's longer term effect. In this sense, COVID-19 shows similarity to the shocks in the Great Recession in that while only an individual shock point was detected, yet there are lingering effects nearby the identified shock, just not extreme enough to be considered a shock.
 
@@ -680,6 +645,25 @@ The similarity between the COVID-19 shock and the Great Recession shocks is even
 
 # Appendix C: Assumption checks for modelling economic structure
 
+For the modelling part, when we subset the predictors, we use linear model. Thus, we need to satisfy the assumptions of linear model that residuals should be normally, independently, identically distributed. 
+
+```{r app7, fig.cap="Residuals plot for monthly model"}
+par(mfrow=c(2,2))
+plot(modelccf,which=1:4)
+
+acf(resid(modelccf))
+pacf(resid(modelccf))
+```
+```{r app8, fig.cap="Residuals plot for daily model"}
+par(mfrow=c(2,2))
+plot(modelccfd,which=1:4)
+
+acf(resid(modelccfd))
+pacf(resid(modelccfd))
+```
+
+
+
 
 # Appendix D: Full Permutation Test Descriptions
 
@@ -809,6 +793,13 @@ knitr::kable(df,
              align = c('c', rep('l', 2))) %>%
 kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
                           font_size = 9, latex_options = "HOLD_position")
+```
+
+# Appendix E: Substting model results
+
+```{r}
+summary(modelccf)
+summary(modelccfd)
 ```
 
 
