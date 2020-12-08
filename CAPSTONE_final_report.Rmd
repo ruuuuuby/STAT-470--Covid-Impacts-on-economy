@@ -295,9 +295,11 @@ plot(ymd(data$DATE)[2:474][-outliersmonsig], resid(arimamodel)[-outliersmonsig],
 points(ymd(data$DATE)[outliersmonsig], resid(arimamodel)[outliersmonsig], col = "red")
 ```
 
+After we remove the linear trend of the model, we check the residuals and decide to apply AR(1), Autoregressive Model (1). It means that current values will depend on previoud one time values. The residuals after AR model with removed linear trend is *Figure 8*. 
 
+*Figure 8* shows the acf of residuals plot. Seems for all lags, the correlation is insignificant, we can conclude that the residuals are independent. The residuals should follow the assumptions of normality, equal variance, and independence. More assumptions checks can be found in *Appendix D*. In conclusion, this model approach is valid. 
 
-
+*Figure 9* shows the residuals with red bubbles shocks. It corresponds to our identification before. However, an issue here is that when we remove linear trend before, we remove the trend of current *Dow_Close* and current predictors. It is common that current *Dow_Close* will not only depend on current predicotors, but also some previous predictors. Thus, we need to have a further approach to take all lags that are significant into consideration. 
 
 ### Modelling Approach 2: Subsetting Predictors 
 
@@ -383,6 +385,9 @@ nysed=as.ts(log(datad$NYSE[2:10011])-log(datad$NYSE[1:10010]))
 Again, we consider two major approaches, starting with the time series approach considering all variables then considering only the significant predictors to the model.
 
 ### Modelling Approach 1: All Predictor Time Series Model
+
+Similar to approach 1 for mothly model, we begin with removing the trend and apply AR(1) model. The results correspond to our discoveries before and the residuals correspond to assumptions so we conclude that the approach is valid and can apply cross correlation approach to the model. 
+
 ```{r}
 regmodeld <- lm(Dowd ~ Dgsd + spd + goldd + nysed)
 outliersmonsigd <- which(abs(regmodeld$residuals) > 3*sqrt(var(regmodeld$residuals)))
