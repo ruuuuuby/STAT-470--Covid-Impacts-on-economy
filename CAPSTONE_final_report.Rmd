@@ -10,7 +10,11 @@ output:
 header-includes: 
 - \usepackage{float}    
 ---
+
+
 \newpage
+\tableofcontents
+
 ```{r setup, include=FALSE}
 rm(list = ls())
 knitr::opts_chunk$set(echo = FALSE,message=FALSE,warning = FALSE, fig.pos = "H", out.extra = "")
@@ -320,7 +324,7 @@ ccf(Dowm,ccim)
 ```
 
 
-```{r, figure.cap='residuals of models, showing the real effects of shocks on percent change' ,fig.height=3}
+```{r, fig.cap = "residuals of models, showing the real effects of shocks on percent change", fig.height=3}
 # linear model 
 alldata=ts.intersect(Dowm,un1 =stats::lag(unemploymentm,-1),un2=stats::lag(unemploymentm,-2),
                      oil1=stats::lag(oilm,-1), 
@@ -411,7 +415,6 @@ Similarily,we will do a cross correlation figure. The lags shown are chosed to b
 From the correlation figure, we can observe that *DOW_Close* is strongly positively correlated with DGS10, SP500, and NYSE. It might due to that all these three depend on stock market companies, while gold price depends on gold. We will consider the siginificant lags within 20 days and construct the model as in monthly data. 
 
 ```{r,fig.cap = "This figure shows cross correlation between Dow and 4 daily predictors.The x-axis is the lag, while before 0 represents past and after future. Future analysis is meaningless here since we will not do prediction. Lag that is higher than blue line means it is significant"}
-
 par(mfrow =c(2,2))
 ccf(Dowd,Dgsd,ylim=range(-0.08,0.1),lag=20)
 ccf(Dowd,spd,ylim=range(-0.08,0.1),lag=20)
@@ -419,7 +422,11 @@ ccf(Dowd,goldd,ylim=range(-0.08,0.1),lag=20)
 ccf(Dowd,nysed,ylim=range(-0.08,0.1),lag=20)
 ```
 
-```{r, figure.cap='residuals of models, showing the real effects of shocks on percent change' ,fig.height=3}
+Using the daily data to analyze on specific shocks we have identified before, we noticed that the shocks would usually last over a month. The 1987 and 1990 shocks seemed to last for one month, while other shocks, specifically between 1998 and 2001 had some longstanding effects that the economy were declining during 1998 and 2001 since most changes were negative. Also, a similar pattern showed up after 2001. However, the current month Dow changes were still pretty stable. One explanation is that even if there is a shock, people need more than one days to react the shocks. 
+
+Also, we checked the pattern of 2009 Great recession and observe that it has the most variation. Thus, during this period, people seemed to face stronger shocks. A similar pattern showed up for March coronavirus shock that it has largest range among the shocks. It can be effects of both financialling stimulation by government and pandemic. 
+
+```{r,fig.cap="residuals of models, showing the real effects of shocks on percent change", fig.height=3}
 # linear model 
 alldatad=ts.intersect(Dowd,
                       dgs0 =stats::lag(Dgsd,0),
@@ -460,9 +467,9 @@ points(ymd(datad$DATE)[7009:7031],resid(modelccfd)[6991:7013],col="red")
 points(ymd(datad$DATE)[7093:7111],resid(modelccfd)[7075:7093],col="red")
 points(ymd(datad$DATE)[9881:9902],resid(modelccfd)[9863:9884],col="red")
 ```
-Using the daily data to analyze on specific shocks we have identified before, we noticed that the shocks would usually last over a month. The 1987 and 1990 shocks seemed to last for one month, while other shocks, specifically between 1998 and 2001 had some longstanding effects that the economy were declining during 1998 and 2001 since most changes were negative. Also, a similar pattern showed up after 2001. However, the current month Dow changes were still pretty stable. One explanation is that even if there is a shock, people need more than one days to react the shocks. 
 
-Also, we checked the pattern of 2009 Great recession and observe that it has the most variation. Thus, during this period, people seemed to face stronger shocks. A similar pattern showed up for March coronavirus shock that it has largest range among the shocks. It can be effects of both financialling stimulation by government and pandemic. 
+
+
 
 ## Considering the Significance of the Shock Residual Magnitudes
 
@@ -486,7 +493,7 @@ We also made assumptions on what is considered a shock. Our shock detection meth
 
 We also acknowledge that our models explained very little of the variation. However, this is to be expected as economic theory suggests that the changes in the DOW cannot be well predicted. In fact, our original goal was not to model the response variable but rather to use the model as a metric for economic structure.
 
-
+\newpage
 # Works Cited
 
 Board of Governors of the Federal Reserve System (US), 10-Year Treasury Constant Maturity Rate [DGS10], retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DGS10, November 30, 2020.
@@ -564,6 +571,7 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
 
 Note that the CPI variable can be transformed to monthly inflation by considering the percent change of the variable. The remaining variables are relatively common metrics of economic performance. Gold is generally considered a more safe investment in uncertain times, meaning that gold prices tend to rise as the economy worsens according to theory. Similarly, unemployment is expected to rise when the economy does poorly. In the opposite direction, we expect the federal funds rate to lower as the economy does poorly as the Federal Reserve will attempt to stimulate the economy, and we expect consumer confidence to likewise lower as the economy as a whole does worse. Other variables, like S&P 500 and the NYSE are expected to follow rather closely to the DOW as these are also more cumulative metrics of economic performance. Some variables, like inflation and oil prices, don't have as consistent of a relationship, though higher oil prices tend to be worse for the economy, and inflation is generally targeted around 2% annually. Lastly, 10 year bond prices act as a metric for beliefs about future interest rates, which will be related to interest and inflation rates.
 
+\newpage
 # Appendix B: Additional Plots and Exploratory Analysis
 
 ## Monthly Data
@@ -649,6 +657,7 @@ for(i in c(2:6)){
 
 The similarity between the COVID-19 shock and the Great Recession shocks is even more clear in the daily data. These two periods nearly across the board have the most volatility of any of the periods, with the exception of Black Monday in some instances and COVID-19 gold prices, which were less volatile. To some extent, the shocks are all recognizable in the predictor variables, though some cases are more subtle than others, for example with the bond prices where the Gulf War has only a very small impact.
 
+\newpage
 # Appendix C: Assumption checks for modelling economic structure
 
 For the modelling part, when we subset the predictors, we use linear model. Thus, we need to satisfy the assumptions of linear model that residuals should be normally, independently, identically distributed. 
@@ -656,21 +665,19 @@ For the modelling part, when we subset the predictors, we use linear model. Thus
 ```{r app7, fig.cap="Residuals plot for monthly model"}
 par(mfrow=c(2,2))
 plot(modelccf,which=1:4)
-
 acf(resid(modelccf))
 pacf(resid(modelccf))
 ```
 ```{r app8, fig.cap="Residuals plot for daily model"}
 par(mfrow=c(2,2))
 plot(modelccfd,which=1:4)
-
 acf(resid(modelccfd))
 pacf(resid(modelccfd))
 ```
 
 
 
-
+\newpage
 # Appendix D: Full Permutation Test Descriptions
 
 For each of our modelling approaches, we conducted a permutation test to test if the residuals in the shock periods were significantly greater in magnitude than the other residuals. These tests were conducted by comparing the sample arithmetic mean of the shock period residual magnitudes with a distribution of the sample arithmetic means of random samples from the original residuals of the same size as the number of shock periods. For each case, we considered 10000 such random samples with the proportion of samples having a higher magnitude residual constituting the p value. 
@@ -800,6 +807,7 @@ knitr::kable(df,
 kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
                           font_size = 9, latex_options = "HOLD_position")
 ```
+
 
 # Appendix E: Subsetting model results
 
