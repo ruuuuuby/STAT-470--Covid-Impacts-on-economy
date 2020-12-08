@@ -21,6 +21,7 @@ library("cluster")
 library("factoextra")
 library(stats)
 library(tidyr)
+library(broom)
 set.seed(470)
 data <- read.table("economicData.txt", header = TRUE)
 data$inflation <- c(NA, (data$cpi[2:length(data$cpi)] - data$cpi[1:length(data$cpi)-1])/
@@ -795,13 +796,19 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
                           font_size = 9, latex_options = "HOLD_position")
 ```
 
-# Appendix E: Substting model results
+# Appendix E: Subsetting model results
 
 ```{r}
-summary(modelccf)
-summary(modelccfd)
+out<-broom::tidy(modelccf)
+knitr::kable(out, caption = "Monthly data subsetted model results")
+```
+```{r}
+out<-broom::tidy(modelccfd)
+knitr::kable(out, caption = "Daily data subsetted model results")
 ```
 
+
+\newpage
 
 # R Script
 ```{r codeAppendix, ref.label = knitr::all_labels(), echo = TRUE, eval = FALSE}
