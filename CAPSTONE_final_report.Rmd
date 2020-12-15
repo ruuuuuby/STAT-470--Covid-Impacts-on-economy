@@ -96,7 +96,58 @@ where $k_{i}$ ~ $N(0, \sigma_k^2)$ and $v_i$ is an indicator variable representi
 ## Data Description
 
 For this analysis, we will be using data collected primarily through Federal Reserve Economic Data (FRED) and yahoo finance which will cover a range of common economic indicators and stock prices. The first set of variables creates our monthly dataset, i.e. data that is reported on a monthly basis, and consists of the unemployment rate, consumer confidence index, DOW Jones Composite (taken on the first of the month), oil price, federal funds rate (taken on the first of the month), and the inflation rate. Note that the inflation rate was originally reported as CPI (consumer price index); inflation was calculated as the percent change of CPI, so it is reported as monthly inflation.
-We also consider a daily data set, i.e. data reported for each day, which consists of the DOW Jones Composite, gold price, S&P 500, New York Stock Exchange, and 10 year bond rates. A more detailed explanation of these variables is in Appendix A. As we proceed with analysis, we will also consider a log transform and a log difference transform on many of these variables.
+We also consider a daily data set, i.e. data reported for each day, which consists of the DOW Jones Composite, gold price, S&P 500, New York Stock Exchange, and 10 year bond rates. A more detailed explanation of these variables is in *Table 1* and *Table 2*. 
+
+```{r}
+date <- c("DATE", "", "Date on which observations were taken; reported as the first of the month")
+dow <- c("DOW", "Dollars", 
+         "Gives the value of the DOW Jones Composite as of closing on the first \nof the month")
+unemployment <- c("unemployment", "", 
+                  "US unemployment rate (unemployed/total people)")
+oil <- c("oil", "dollars/barrel",
+         "Price of oil; based out of West Texas")
+gold <- c("gold", "dollers/ounce",
+          "Price of gold as of the first of the month; based on London Bullion Market")
+cpi <- c("cpi", "relative to 1982-1984" , 
+         "Consumer price index; amount that 1 dollar is worth in 1982-1984 dollars")
+ffr <- c("ffr", "", 
+         "Federal Funds Rate set by the Federal Reserve")
+cc <- c("consumer_confidence", "",
+"Consumer confidence using the University of Michigan Consumer Sentiment 
+        index with 1966 as the base year")
+varExplanations <- matrix(c(date, dow, unemployment, oil, gold, cpi, ffr, cc), 
+                          ncol = 3, byrow = TRUE)
+varExplanations <- as.data.frame(varExplanations)
+colnames(varExplanations) <- c("Variable Name", "Unit", "Description")
+knitr::kable(varExplanations, 
+             caption = "Full description of all monthly variables",
+             align = c('c', rep('l', 2))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position")%>%
+  kableExtra::column_spec(3, width = "30em")
+```
+
+```{r}
+date <- c("DATE", "", "Date on which observations were taken; reported as the first of the month")
+dow <- c("DOW", "dollars", "Value of the DOW Jones Composite as of closing on the particular day")
+nyse <- c("nyse", "dollars", 
+          "Value for the New York Stock Exchange on the particular day as of closing")
+bond <- c("bond10", "dollars", "10 year US bond prices")
+sp <- c("sp", "dollars", "Value of the S&P 500 Index")
+gold <- c("gold", "dollers/ounce", "Price of gold; based on London Bullion Market")
+varExplanations <- matrix(c(date, dow, nyse, bond, sp, gold), ncol = 3, byrow = TRUE)
+varExplanations <- as.data.frame(varExplanations)
+colnames(varExplanations) <- c("Variable Name", "Unit", "Description")
+knitr::kable(varExplanations, 
+             caption = "Full description of all daily variables",
+             align = c('c', rep('l', 2))) %>%
+kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
+                          font_size = 9, latex_options = "HOLD_position")
+```
+
+We can also consider a brief explanation of how these variables are generally used as economic metrics. Gold is generally considered a more safe investment in uncertain times, meaning that gold prices tend to rise as the economy worsens according to theory. Similarly, unemployment is expected to rise when the economy does poorly. In the opposite direction, we expect the federal funds rate to lower as the economy does poorly as the Federal Reserve will attempt to stimulate the economy, and we expect consumer confidence to likewise lower as the economy as a whole does worse. Other variables, like S&P 500 and the NYSE are expected to follow rather closely to the DOW as these are also more cumulative metrics of economic performance. Some variables, like inflation and oil prices, don't have as consistent of a relationship, though higher oil prices tend to be worse for the economy, and inflation is generally targeted around 2% annually. Lastly, 10 year bond prices act as a metric for beliefs about future interest rates, which will be related to interest and inflation rates.
+
+As we proceed with analysis, note that we will also consider a log transform and a log difference transform on many of these variables, often with the goal of meeting various modelling assumptions.
 
 ## Research Questions
 
@@ -145,7 +196,7 @@ plot(ymd(datad$DATE)[2:length(datad$DOW)], DowDiffd, ylab = "log DOW diff",
 ```
 
 
-Of course, we also want to consider the explanatory variables and their relationship to the DOW. Further plots and analysis considering these variables can be found in Appendix B.
+Of course, we also want to consider the explanatory variables and their relationship to the DOW. Further plots and analysis considering these variables can be found in Appendix A.
 
 At this stage, we also acknowledge that while we considered numerical summaries as an approach to exploring the data, we found that due to the temporal nature of the data, the data is much better understood graphically. Summary statistics like the sample arithmetic mean or five number summaries of the variables would hold very little meaning as these variables are not stable over time.
 
@@ -251,7 +302,7 @@ After modelling the economic structure, we tend to compare shocks and non-shock 
 
 ## Analysis on Monthly Data
 
-For the monthly data, we choose the response variable as *Dow_Close* value. We also choose 6 monthly reported economic predictors to measure the strucuture. Our goal is to examine how stock market (economy) will respond to changes in macrovarables. To normalize the data, we take log of the difference of all our variables except for inflation, which is equal to take the percent change of our values. More importantly, such transformation can satisfy our assumption of stationarity on response variable. 
+For the monthly data, we choose the response variable as *Dow_Close* value. We also choose 6 monthly reported economic predictors to measure the structure. Our goal is to examine how the stock market (the economy, as measured by the DOW Jones Composite Average) will respond to changes in macro-variables. To normalize the data, we take log of the difference of all our variables except for inflation, which is equal to take the percent change of our values. More importantly, such transformation can satisfy our assumption of stationarity on response variable. 
 
 
 
@@ -299,9 +350,10 @@ plot(ymd(data$DATE)[2:474][-outliersmonsig], resid(arimamodel)[-outliersmonsig],
 points(ymd(data$DATE)[outliersmonsig], resid(arimamodel)[outliersmonsig], col = "red")
 ```
 
-After we remove the linear trend of the model, we check the residuals and decide to apply AR(1), Autoregressive Model (1). It means that current values will depend on previoud one time values. The residuals after AR model with removed linear trend is *Figure 8*. 
+After we remove the linear trend of the model, we check the residuals and decide to apply AR(1), Autoregressive Model (1).
+AR(1) is a time series model where we assume that each current observation depends on the value directly preceding it. The residuals after AR model with removed linear trend is *Figure 8*. 
 
-*Figure 8* shows the acf of residuals plot. Seems for all lags, the correlation is insignificant, we can conclude that the residuals are independent. The residuals should follow the assumptions of normality, equal variance, and independence. More assumptions checks can be found in *Appendix D*. In conclusion, this model approach is valid. 
+*Figure 8* shows the acf of residuals plot. Seems for all lags, the correlation is insignificant, we can conclude that the residuals are independent. The residuals should follow the assumptions of normality, equal variance, and independence. More assumptions checks can be found in *Appendix B*. In conclusion, this model approach is valid. 
 
 *Figure 9* shows the residuals with red bubbles shocks. It corresponds to our identification before. However, an issue here is that when we remove linear trend before, we remove the trend of current *Dow_Close* and current predictors. It is common that current *Dow_Close* will not only depend on current predicotors, but also some previous predictors. Thus, we need to have a further approach to take all lags that are significant into consideration. 
 
@@ -324,7 +376,7 @@ ccf(Dowm,ccim)
 ```
 
 
-```{r, fig.cap = "residuals of models, showing the real effects of shocks on percent change", fig.height=3}
+```{r, fig.cap = "This plot shows the residuals of models, showing the real effects of the shocks on percent change. The points in red correspond to the points in the months identified as shock periods by our monthly shock identification process.", fig.height=3}
 # linear model 
 alldata=ts.intersect(Dowm,un1 =stats::lag(unemploymentm,-1),un2=stats::lag(unemploymentm,-2),
                      oil1=stats::lag(oilm,-1), 
@@ -390,7 +442,7 @@ Again, we consider two major approaches, starting with the time series approach 
 
 ### Modelling Approach 1: All Predictor Time Series Model
 
-Similar to approach 1 for mothly model, we begin with removing the trend and apply AR(1) model. The results correspond to our discoveries before and the residuals correspond to assumptions so we conclude that the approach is valid and can apply cross correlation approach to the model. 
+Similar to approach 1 for monthly model, we begin with removing the trend and apply AR(1) model. The results correspond to our discoveries before and the residuals correspond to assumptions so we conclude that the approach is valid and can apply cross correlation approach to the model. 
 
 ```{r}
 regmodeld <- lm(Dowd ~ Dgsd + spd + goldd + nysed)
@@ -426,7 +478,7 @@ Using the daily data to analyze on specific shocks we have identified before, we
 
 Also, we checked the pattern of 2009 Great recession and observe that it has the most variation. Thus, during this period, people seemed to face stronger shocks. A similar pattern showed up for March coronavirus shock that it has largest range among the shocks. It can be effects of both financialling stimulation by government and pandemic. 
 
-```{r,fig.cap="residuals of models, showing the real effects of shocks on percent change", fig.height=3}
+```{r,fig.cap="This plot shows the residuals of the model, showing the real effects of shocks on percent change. The red points represent the points from the months that were identified as shock periods in our monthly shock identification step.", fig.height=3}
 # linear model 
 alldatad=ts.intersect(Dowd,
                       dgs0 =stats::lag(Dgsd,0),
@@ -473,7 +525,7 @@ points(ymd(datad$DATE)[9881:9902],resid(modelccfd)[9863:9884],col="red")
 
 ## Considering the Significance of the Shock Residual Magnitudes
 
-In order to test if the magnitudes of the residuals for shock periods are larger than for non-shock periods, we used permutation testing, the methods and results for which are given in much more detail in Appendix D. The results showed that the monthly analysis shows very strong evidence that the shocks have higher magnitude residuals in both models. The daily analysis also showed evidence that the shock periods, both those identified using the methods for daily analysis and for those identified using monthly analysis, have higher magnitude residuals, though not quite as strong of evidence compared to the monthly.
+In order to test if the magnitudes of the residuals for shock periods are larger than for non-shock periods, we used permutation testing, the methods and results for which are given in much more detail in Appendix C. The results showed that the monthly analysis shows very strong evidence that the shocks have higher magnitude residuals in both models. The daily analysis also showed evidence that the shock periods, both those identified using the methods for daily analysis and for those identified using monthly analysis, have higher magnitude residuals, though not quite as strong of evidence compared to the monthly.
 
 # Discussion
 
@@ -521,58 +573,9 @@ Zekra, L. (2020). COVID-19 Pandemic and Global Economic Impact. *Ovidius Univers
 
 Zeshan, M. (2020). Double-hit scenario of Covid-19 and global value chains. *Environment, Development and Sustainability*. doi:10.1007/s10668-020-00982-w This article considers which sectors of the economy were most hit by COVID-19 and found that all sectors had at least mild impact with some larger than others.
 
-# Appendix A: Full Variable Description
-```{r}
-date <- c("DATE", "", "Date on which observations were taken; reported as the first of the month")
-dow <- c("DOW", "Dollars", 
-         "Gives the value of the DOW Jones Composite as of closing on the first \nof the month")
-unemployment <- c("unemployment", "", 
-                  "US unemployment rate (unemployed/total people)")
-oil <- c("oil", "dollars/barrel",
-         "Price of oil; based out of West Texas")
-gold <- c("gold", "dollers/ounce",
-          "Price of gold as of the first of the month; based on London Bullion Market")
-cpi <- c("cpi", "relative to 1982-1984" , 
-         "Consumer price index; amount that 1 dollar is worth in 1982-1984 dollars")
-ffr <- c("ffr", "", 
-         "Federal Funds Rate set by the Federal Reserve")
-cc <- c("consumer_confidence", "",
-"Consumer confidence using the University of Michigan Consumer Sentiment 
-        index with 1966 as the base year")
-varExplanations <- matrix(c(date, dow, unemployment, oil, gold, cpi, ffr, cc), 
-                          ncol = 3, byrow = TRUE)
-varExplanations <- as.data.frame(varExplanations)
-colnames(varExplanations) <- c("Variable Name", "Unit", "Description")
-knitr::kable(varExplanations, 
-             caption = "Full description of all monthly variables",
-             align = c('c', rep('l', 2))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position")%>%
-  kableExtra::column_spec(3, width = "30em")
-```
-
-```{r}
-date <- c("DATE", "", "Date on which observations were taken; reported as the first of the month")
-dow <- c("DOW", "dollars", "Value of the DOW Jones Composite as of closing on the particular day")
-nyse <- c("nyse", "dollars", 
-          "Value for the New York Stock Exchange on the particular day as of closing")
-bond <- c("bond10", "dollars", "10 year US bond prices")
-sp <- c("sp", "dollars", "Value of the S&P 500 Index")
-gold <- c("gold", "dollers/ounce", "Price of gold; based on London Bullion Market")
-varExplanations <- matrix(c(date, dow, nyse, bond, sp, gold), ncol = 3, byrow = TRUE)
-varExplanations <- as.data.frame(varExplanations)
-colnames(varExplanations) <- c("Variable Name", "Unit", "Description")
-knitr::kable(varExplanations, 
-             caption = "Full description of all daily variables",
-             align = c('c', rep('l', 2))) %>%
-kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
-                          font_size = 9, latex_options = "HOLD_position")
-```
-
-Note that the CPI variable can be transformed to monthly inflation by considering the percent change of the variable. The remaining variables are relatively common metrics of economic performance. Gold is generally considered a more safe investment in uncertain times, meaning that gold prices tend to rise as the economy worsens according to theory. Similarly, unemployment is expected to rise when the economy does poorly. In the opposite direction, we expect the federal funds rate to lower as the economy does poorly as the Federal Reserve will attempt to stimulate the economy, and we expect consumer confidence to likewise lower as the economy as a whole does worse. Other variables, like S&P 500 and the NYSE are expected to follow rather closely to the DOW as these are also more cumulative metrics of economic performance. Some variables, like inflation and oil prices, don't have as consistent of a relationship, though higher oil prices tend to be worse for the economy, and inflation is generally targeted around 2% annually. Lastly, 10 year bond prices act as a metric for beliefs about future interest rates, which will be related to interest and inflation rates.
 
 \newpage
-# Appendix B: Additional Plots and Exploratory Analysis
+# Appendix A: Additional Plots and Exploratory Analysis
 
 ## Monthly Data
 ```{r appb1, fig.cap="These plots show the monthly exploratory variables over time with the DOW also shown for reference. The blue vertical lines show the shock periods identified by the analysis. Notice that in the explanatory variables, the peaks and periods of larger change appear correlated with the movements of the DOW. Likewise, the shocks often appear in times where the explanatory variables are experiencing change."}
@@ -658,7 +661,7 @@ for(i in c(2:6)){
 The similarity between the COVID-19 shock and the Great Recession shocks is even more clear in the daily data. These two periods nearly across the board have the most volatility of any of the periods, with the exception of Black Monday in some instances and COVID-19 gold prices, which were less volatile. To some extent, the shocks are all recognizable in the predictor variables, though some cases are more subtle than others, for example with the bond prices where the Gulf War has only a very small impact.
 
 \newpage
-# Appendix C: Assumption checks for modelling economic structure
+# Appendix B: Assumption checks for modelling economic structure
 
 For the modelling part, when we subset the predictors, we use linear model. Thus, we need to satisfy the assumptions of linear model that residuals should be normally, independently, identically distributed. 
 
@@ -678,7 +681,7 @@ pacf(resid(modelccfd))
 
 
 \newpage
-# Appendix D: Full Permutation Test Descriptions
+# Appendix C: Full Permutation Test Descriptions
 
 For each of our modelling approaches, we conducted a permutation test to test if the residuals in the shock periods were significantly greater in magnitude than the other residuals. These tests were conducted by comparing the sample arithmetic mean of the shock period residual magnitudes with a distribution of the sample arithmetic means of random samples from the original residuals of the same size as the number of shock periods. For each case, we considered 10000 such random samples with the proportion of samples having a higher magnitude residual constituting the p value. 
 
@@ -809,7 +812,7 @@ kableExtra::kable_styling(bootstrap_options = c("striped", "condensed"),
 ```
 
 
-# Appendix E: Subsetting model results
+# Appendix D: Subsetting model results
 
 ```{r}
 out<-broom::tidy(modelccf)

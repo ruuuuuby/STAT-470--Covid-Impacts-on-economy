@@ -1,0 +1,31 @@
+---
+title: "Final Project Report Changes"
+author: "Leah Hunt, Ziling Zhang, Jiahui Cheng"
+date: "12/15/2020"
+output: pdf_document
+---
+
+# Introduction
+
+To address the feedback referring to the variable tables, which is what we assumed the "feedback tables" to mean, we moved all of the context in Appendix A up into the body of the report and removed Appendix A entirely. 
+
+In regards to the feedback regarding potential collinearity involving S&P 500 and NYSE, we added this concern to the limitations section. 
+
+# EDA
+
+TBD
+
+# Statistical Methods
+
+In response to the feedback about clarifying what the AR models are, in particular that these are the time series models, we added clarification about what the AR(1) model refers to when we introduced the model in the *Modelling Approach 1: All Predictor Time Series Model* section. 
+
+To address the confusion about Figure 15, we modified the caption of the figure to clarify that the red points correspond to the months that were considered shocks in the monthly model, which was not immediately clear in the original caption.
+
+# Conclusions
+No suggested changes were given.
+
+# Figures and Tables
+No suggested changes were given
+
+# Writing and Coding
+We fixed a few mild gramatical and spelling errors throughout the report in response to the comment about seeing minor typos. 
