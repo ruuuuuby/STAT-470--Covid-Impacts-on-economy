@@ -543,6 +543,8 @@ One major limitation to our analysis is the set of implicit assumptions that we 
 
 We also made assumptions on what is considered a shock. Our shock detection method identified only shocks with a rapid effect in a particular month, which excludes cases like the implementation of the Internet that was a shock to the economy but happened slightly more gradually. The identification was also entirely dependent on our data, so introducing other shock identification methods would be a good opportunity for further study.
 
+Statistically, we note that the variables for DOW, S&P 500, and nyse are very similar, even sharing components between them. While our analysis predominantly ignores the issues, particularly in regards to collinearity, that this contributes to, we do acknowledge that these issues do hinder our models. Even though the constructed models themselves are not the true purpose of the analysis and our analysis was limited by the data we had, we would suggest further analysis including models with more constraints applied to limit collinearity, possibly including some other daily variables that are less similar to one another.
+
 We also acknowledge that our models explained very little of the variation. However, this is to be expected as economic theory suggests that the changes in the DOW cannot be well predicted. In fact, our original goal was not to model the response variable but rather to use the model as a metric for economic structure.
 
 \newpage
